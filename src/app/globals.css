@@ -10,8 +10,10 @@
   --color-cream: #f4e8dd;
   --color-cream-2: #d9c8bb;
   --color-muted: #9c8a86;
-  --font-display: var(--font-instrument), "Times New Roman", serif;
-  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --color-line: rgba(244, 232, 221, 0.14);
+  /* Branding Mark I pairing */
+  --font-display: var(--font-dm-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
 }
 
 :root {
@@ -32,12 +34,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Signature radial wine gradient used across the deck */
+/* Signature wine radial from the brand kit: wine-2 at the focal point, wine at mid-radius, ink at the edge */
 .bg-wine-radial {
-  background:
-    radial-gradient(120% 90% at 85% 90%, #6e0e28 0%, #3a0714 45%, transparent 75%),
-    radial-gradient(90% 70% at 10% 10%, #1a0a0e 0%, transparent 60%),
-    var(--color-ink);
+  background: radial-gradient(
+    ellipse 80% 110% at 60% 45%,
+    var(--color-wine-2) 0%,
+    var(--color-wine) 45%,
+    var(--color-ink) 100%
+  );
 }
 
 .bg-wine-card {
@@ -76,14 +80,15 @@ body {
 
 .eyebrow {
   font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 0.72rem;
-  letter-spacing: 0.42em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
 .hairline {
-  border-color: rgba(244, 232, 221, 0.14);
+  border-color: var(--color-line);
 }
 
 /* Registration-mark crosshair from the cover slides */

@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Manrope } from "next/font/google";
+import { Archivo, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 
-const instrument = Instrument_Serif({
+// Branding Mark I type pairing: DM Serif Display (display) + Archivo (text).
+const dmSerif = DM_Serif_Display({
   weight: "400",
   subsets: ["latin"],
-  variable: "--font-instrument",
+  variable: "--font-dm-serif",
   display: "swap",
 });
 
-const manrope = Manrope({
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-archivo",
   display: "swap",
 });
 
@@ -30,7 +31,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${instrument.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${dmSerif.variable} ${archivo.variable}`}>
       <body>{children}</body>
     </html>
   );

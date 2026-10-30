@@ -1,30 +1,57 @@
 # IP Studios — Brand & Information Reference
 
-Source: `IP-Studios-Deck-2026.pdf` (16-slide investor deck, 2026). This file summarizes the deck so the site can be built from it. Structured copy also lives in `src/content.ts`.
+Source: `IP-Studios-Deck-2026.pdf` (16-slide investor deck, 2026) plus the October 2026 brand kit (Branding Mark I). This file summarizes both so the site can be built from them. Structured copy also lives in `src/content.ts`.
 
 ## Positioning
 
-- **Name:** IP Studios (wordmark: "IP" in hot pink, "STUDIOS" in cream)
+- **Name:** IP Studios. Mark: Branding Mark I ("IP" in hot pink over "STUDIOS" in cream, see below)
 - **Tagline:** Monetizing IP and scaling internet trends
 - **Thesis:** Memes are never monetized correctly. IP Studios is "The IP Factory": acquire 25% of Tung Tung Tung Sahur and his universe, turn it into a multi-billion dollar franchise, and use that revenue, data and distribution to fund the next 100 IPs.
 
+## Official mark: Branding Mark I
+
+Chosen October 2026 from a 20-option exploration (option 03, "Masthead"). Version 1.0. The full kit, with copyable SVGs and a live contrast table, is the "IP Studios Brand Kit" artifact; the exploration is the "IP Studios Logo Options" artifact.
+
+**Construction**
+
+- **IP** — DM Serif Display Regular, tracking −4% of the type size. Always carries the accent (hot pink), or crimson at small sizes on cream, or the mono color.
+- **STUDIOS** — Archivo SemiBold, all caps, letter-spaced until it spans exactly the width of IP. Type size 13% of the IP size; baseline 16% of the IP size below the IP baseline. Takes the text color of its ground (cream on dark, ink on light).
+- **Unit x** — the cap height of the I. Clear space is ½x on every side, measured from the ink of the letters.
+- **Never** stretch, recolor outside the palette, add effects, outline, swap typefaces, rotate, or retype the mark. Use the exported files.
+
+**Lockups** (code in `src/components/Logo.tsx`, static files in `public/brand/`)
+
+| Lockup | Use | Minimum size | Files |
+| --- | --- | --- | --- |
+| Primary (stacked) | Default. Covers, title cards, packaging | 64px / 18mm wide | `primary-*.svg` |
+| Horizontal | Banners, email headers, sponsor rows | 140px wide | `horizontal-*.svg` |
+| Inline | Site nav, footers, document headers, video bugs | 110px / 30mm wide | `inline-*.svg` |
+| Monogram | App icon, favicon, social avatar (IP in a tile, radius 22%) | 24px / 7mm | `monogram-*.svg`, `src/app/icon.svg` |
+
+**Color ways:** `on-dark` (pink IP, cream STUDIOS, for ink and wine grounds), `on-light` (pink IP, ink STUDIOS, 64px and up), `on-light-crimson` (small sizes and print on cream), `on-pink` (all ink), `mono-cream`, `mono-ink`. Monogram tiles: ink (default), wine, cream, pink, transparent.
+
+The exported SVGs reference the Google Fonts families by name. Install DM Serif Display and Archivo before opening them in Figma or Illustrator, and convert text to outlines before sending files to printers or partners.
+
 ## Visual identity
 
-| Token | Value | Use |
-| --- | --- | --- |
-| Ink | `#0a0607` | Page background |
-| Wine | `#4d0a1c` → `#7a0f2a` | Radial gradients, card fills |
-| Crimson | `#a3123a` | Secondary card tone |
-| Accent (hot pink) | `#ff2d5e` | One or two emphasised words per headline, bullets, "$" signs |
-| Cream | `#f4e8dd` | Headline and body text |
-| Cream 2 | `#d9c8bb` | Secondary text |
-| Muted | `#9c8a86` | Eyebrows, labels |
+| Token | Value | Use | Share |
+| --- | --- | --- | --- |
+| Ink | `#0a0607` | Page ground, type on light surfaces | 55% |
+| Wine | `#4d0a1c` | Gradient mid-tone, card fills | 15% |
+| Wine 2 | `#7a0f2a` | Gradient focal point, hover states | 8% |
+| Crimson | `#a3123a` | Secondary card tone, small IP on cream | 4% |
+| Accent (hot pink) | `#ff2d5e` | The IP in the mark, one or two words per headline, `$` and `+` on numbers | 5% |
+| Cream | `#f4e8dd` | Headline and body text on dark | 10% |
+| Cream 2 | `#d9c8bb` | Secondary text, hairline rules | 2% |
+| Muted | `#9c8a86` | Eyebrows, labels, captions | 1% |
+| Line | `rgba(244,232,221,.14)` | Hairline borders | — |
 
-- **Display type:** condensed high-contrast serif, all caps, tight leading (Instrument Serif or similar). Every headline has one or two words in accent pink.
-- **Body type:** clean geometric sans (Manrope or similar), wide letter-spaced eyebrows (e.g. `2 0 2 6`).
-- **Texture:** black-to-wine radial gradient with subtle film grain; registration-mark crosshairs on cover slides.
-- **Cards:** rounded (≈24px), wine gradient fill, hairline cream border at ~15% opacity. Inactive cards use a darker ink gradient.
-- **Stats:** huge serif numerals with the `+` or `$` in pink, small sans label beneath.
+- **Wine radial** (the signature ground): `radial-gradient(ellipse 80% 110% at 60% 45%, #7a0f2a 0%, #4d0a1c 45%, #0a0607 100%)` with a 10% film-grain overlay set to overlay blend. Class `.bg-wine-radial` plus `.grain`.
+- **Display type:** DM Serif Display, all caps, leading .95, tracking −1% to −2%. One or two words per headline in accent pink. Stats: large serif numerals with the `+` or `$` in pink, Archivo label beneath.
+- **Text type:** Archivo. Body 400 at 16/1.6; UI labels 600; eyebrows 600, all caps, `.32em` tracking, muted (e.g. `2 0 2 6` on covers uses wider `.9em`).
+- **Contrast:** cream on ink 16.7:1, pink on ink 5.6:1, cream on wine 12.7:1, ink on pink 5.6:1, pink on cream 3.0:1 (large type and the logo only; use crimson for small marks on cream).
+- **Texture:** black-to-wine radial with subtle grain; registration-mark crosshairs on cover slides.
+- **Cards:** rounded (≈24px), wine gradient fill, hairline cream border at ~14% opacity. Inactive cards use a darker ink gradient.
 
 ## Slide-by-slide content
 

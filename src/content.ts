@@ -5,6 +5,8 @@ export const brand = {
   year: "2026",
   tagline: "Monetizing IP and scaling internet trends",
   copyright: "IP Studios. All rights reserved.",
+  // Official mark. See docs/brand/BRAND.md and src/components/Logo.tsx.
+  mark: { name: "Branding Mark I", version: "1.0", issued: "2026-10" },
 };
 
 export const brainrotCharacters = [
