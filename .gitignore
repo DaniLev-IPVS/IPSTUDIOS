@@ -7,3 +7,9 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# Hero video working files (regenerable from the blend file or discarded takes)
+*.blend1
+docs/hero/blocking/clips/
+docs/hero/blocking/stills/
+docs/hero/seedance/rejected/

@@ -5,6 +5,8 @@ export const brand = {
   year: "2026",
   tagline: "Monetizing IP and scaling internet trends",
   copyright: "IP Studios. All rights reserved.",
+  // Official mark. See docs/brand/BRAND.md and src/components/Logo.tsx.
+  mark: { name: "Branding Mark I", version: "1.0", issued: "2026-10" },
 };
 
 export const brainrotCharacters = [
@@ -208,3 +210,81 @@ export const factory = {
   thesis:
     "The operational muscles, audience data, relationships and revenue acquired through Tung are the exact same muscles required to launch original IP. The infrastructure becomes more valuable and cost efficient with every character pushed through the factory.",
 };
+
+// ---------------------------------------------------------------------------
+// Hero site copy: one block per resting frame of the hero video.
+// Positions are percentages of the 16:9 video frame, measured from the Blender
+// blocking camera at each resting frame (see docs/site/CONCEPT.md, section 4c).
+// ---------------------------------------------------------------------------
+
+// TODO(Daniel): confirm the public contact address before launch.
+export const contactEmail = "hello@ipstudios.com";
+
+export const sections = {
+  world: {
+    eyebrow: "The world",
+    title: ["Absurd characters,", "absurd names,"],
+    accent: "viral since 2025",
+    body: "Italian Brainrot and the meme characters around it are the most watched new IP on the internet, built entirely by fans.",
+  },
+  proof: {
+    eyebrow: "Proof and opportunity",
+    title: ["On par with"],
+    accent: "IP giants",
+    after: "with $0 in marketing",
+    body: "Tung Tung Tung Sahur sits third in Google Trends, between MrBeast and Peppa Pig. Meme IP now competes with the biggest franchises on earth, and nobody is running it like one.",
+    stats: [
+      { value: "$30M+", label: "Fortnite revenue in 48 hours" },
+      { value: "#1", label: "Custom game in Roblox history" },
+      { value: "25M+", label: "Concurrent players, a world record" },
+    ],
+  },
+  problem: {
+    eyebrow: "The problem",
+    title: ["But the internet"],
+    accent: "has a pattern",
+    body: "A character goes viral, peaks, and decays. Pepe, Doge and Chill Guy pulled billions of views and their IP captured almost none of it.",
+    paths: [
+      { tone: "accent", label: "Path A", note: "An operator turns the peak into a franchise." },
+      { tone: "cream", label: "Path B", note: "It fades, like every meme before it." },
+    ],
+  },
+  vision: {
+    eyebrow: "The vision",
+    title: "The IP Factory",
+    left: {
+      heading: "What goes in",
+      items: ["Team", "Distribution", "Network", "Retail relationships", "Data"],
+      note: "Every muscle built running Tung is the muscle that launches the next character.",
+    },
+    right: {
+      heading: "What comes out",
+      items: [
+        { title: "Proprietary IP", note: "Original franchises built from zero on the Pudgy playbook." },
+        { title: "IP acquisition", note: "Culturally relevant IP with audiences that already exist." },
+        { title: "Celebrity IP", note: "Character franchises built with talent." },
+      ],
+    },
+  },
+  team: {
+    eyebrow: "Team",
+    title: ["We've done this"],
+    accent: "before",
+  },
+  contact: {
+    title: ["Let's build the"],
+    accent: "next franchise",
+    body: "IP Studios turns viral internet characters into multi-billion dollar franchises.",
+    cta: "Contact us",
+  },
+};
+
+/** One short line per person for the team circles. Full bios stay in `team` and `advisors`. */
+export const teamCircles = [
+  { name: "Austin Lee", role: "CEO", line: "Former CMO, Pudgy Penguins", photo: "/deck/team-austin.png" },
+  { name: "Blair Chapman III", role: "CSO", line: "Founder, The One Platform", photo: "/deck/team-blair.png" },
+  { name: "Dan Rozenberg", role: "CBDO", line: "$100M+ in retail revenue", photo: "/deck/team-dan.png" },
+  { name: "Matt Karol", role: "Advisor", line: "Founder, Akashic Studios", photo: "/deck/advisor-matt.png" },
+  { name: "Eyal Baumel", role: "Advisor", line: "Founder, Flywheel. Ex-CEO, Yoola", photo: "/deck/advisor-eyal.png" },
+  { name: "Phil McKenzie", role: "Advisor", line: "Co-founder and COO, Goldfinch", photo: "/deck/advisor-phil.png" },
+];
