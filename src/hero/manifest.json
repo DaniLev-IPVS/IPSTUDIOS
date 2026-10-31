@@ -1,0 +1,87 @@
+{
+  "motionSrc": "/hero/motion.mp4",
+  "poster": "/hero/poster.jpg",
+  "motion": [
+    {
+      "name": "P1-cover",
+      "start": 0.0,
+      "duration": 5.8333
+    },
+    {
+      "name": "P2-world",
+      "start": 5.8333,
+      "duration": 14.7917
+    },
+    {
+      "name": "P3-proof",
+      "start": 20.625,
+      "duration": 12.7083
+    },
+    {
+      "name": "P4-problem",
+      "start": 33.3333,
+      "duration": 13.0833
+    },
+    {
+      "name": "P5-vision",
+      "start": 46.4167,
+      "duration": 17.4167
+    },
+    {
+      "name": "P6-team",
+      "start": 63.8333,
+      "duration": 6.2083
+    },
+    {
+      "name": "P7-contact",
+      "start": 70.0417,
+      "duration": 5.3333
+    }
+  ],
+  "rest": [
+    {
+      "name": "P1-cover",
+      "src": "/hero/r1.mp4",
+      "duration": 9.75
+    },
+    {
+      "name": "P2-world",
+      "src": "/hero/r2.mp4",
+      "duration": 9.8333
+    },
+    {
+      "name": "P3-proof",
+      "src": "/hero/r3.mp4",
+      "duration": 12.0
+    },
+    {
+      "name": "P4-problem",
+      "src": "/hero/r4.mp4",
+      "duration": 9.9167
+    },
+    {
+      "name": "P5-vision",
+      "src": "/hero/r5.mp4",
+      "duration": 9.9167
+    },
+    {
+      "name": "P6-team",
+      "src": "/hero/r6.mp4",
+      "duration": 13.0
+    },
+    {
+      "name": "P7-contact",
+      "src": "/hero/r7.mp4",
+      "duration": 15.4167
+    }
+  ],
+  "sources": {
+    "P1-cover": "seedance",
+    "P2-world": "seedance",
+    "P3-proof": "seedance",
+    "P4-problem": "seedance",
+    "P5-vision": "seedance",
+    "P6-team": "seedance",
+    "P7-contact": "seedance"
+  }
+}
