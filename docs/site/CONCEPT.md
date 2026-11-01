@@ -150,3 +150,11 @@ Seedance plan: each M clip is one EDIT task (all between 4 and 20 s). Each R cli
 - Seedance kept the Team line larger and tighter than the blocking; the team circles were fitted to the actual frame rather than re-generating.
 - `motion.mp4` is about 30 MB; a lower-bitrate mobile encode would help on cellular.
 - Mobile uses the same 16:9 video cropped; a 9:16 render would need a second Blender camera pass.
+
+## 8. Revision: chained Seedance, no jumps (1 Nov 2026)
+
+- **Why it jumped.** Each section was edited by Seedance on its own, so the end of one section and the start of the next were different renders. The site also cross-faded between the rest loop and the motion clip at whatever frame the loop was on, which read as a blur.
+- **Chained edits.** `scripts/seedance_chain.py` builds each Seedance source as the last 2 s of the previous finished section followed by that section's Blender blocking. After the edit it finds the frame that matches the previous section's last frame and splices there, fading out any residual difference over 14 frames. Seam difference is now under 1/255 mean per pixel (compression noise). Finals live in `docs/hero/seedance/v2/`.
+- **Look.** Screens removed; the floor is endless and fades into fog with no edge lights. Prompts list only the characters in each section and use one reference crop per character.
+- **Site handoff.** No fades between video layers. A rest loop scrubs to the frame it shares with the next motion clip before handing over, and a motion clip lands on its first or last frame before handing back. Copy appears only once the picture has reached its section. Text blocks have a soft dark backing.
+- Spend for this revision was about $60 on Vibecreate, including retakes of P1, P2 and P6.
