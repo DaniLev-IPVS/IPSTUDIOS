@@ -14,8 +14,8 @@ import { brand, contactEmail, sections, teamCircles, viralStats } from "@/conten
  *   M2..M7      motion clips, scrubbed by scroll between two rests.
  *
  * All motion clips live in one file (motion.mp4) back to back; manifest.json holds
- * each clip's offset. The last frame of every rest clip is the first frame of the
- * next motion clip, so the hand-off between the two layers is a short cross-fade.
+ * each clip's offset in frames. The Seedance pairs are chained: the first frame of every
+ * pair is the exact last frame of the pair before, so the scene never jumps.
  */
 
 type Seg = { kind: "rest" | "motion"; index: number; start: number; length: number };
@@ -47,6 +47,12 @@ const smooth = (t: number) => {
   return c * c * (3 - 2 * c);
 };
 
+const FPS = 24;
+/** Time of the centre of frame `f`, so seeks land on that exact frame. */
+const frameTime = (f: number) => (f + 0.5) / FPS;
+const motionFirst = (j: number) => frameTime(manifest.motion[j].startFrame);
+const motionLast = (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1);
+
 /** Opacity of the copy for rest `i` at scroll position `y` (in vh). */
 function copyOpacity(i: number, y: number) {
   const rest = TRACK.segs.find((s) => s.kind === "rest" && s.index === i)!;
@@ -65,7 +71,6 @@ export default function HeroStage() {
   const copyRefs = useRef<(HTMLElement | null)[]>([]);
   const stageRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("intro");
-  const [active, setActive] = useState<{ kind: "rest" | "motion"; index: number }>({ kind: "motion", index: 0 });
   const [section, setSection] = useState(0);
   const phaseRef = useRef<Phase>("intro");
 
@@ -92,7 +97,7 @@ export default function HeroStage() {
     const v = motionRef.current;
     if (!v) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const end = manifest.motion[0].start + manifest.motion[0].duration;
+    const end = motionLast(0);
     const finish = () => {
       if (phaseRef.current === "live") return;
       phaseRef.current = "live";
@@ -102,66 +107,138 @@ export default function HeroStage() {
     };
     window.scrollTo(0, 0);
     if (reduce) {
-      v.currentTime = Math.max(0, end - 0.05);
+      v.currentTime = end;
       finish();
       return;
     }
     document.documentElement.style.overflow = "hidden";
+    // Watch every frame so the intro stops exactly on motion 0's last frame.
+    let watch = 0;
     const onTime = () => {
-      if (v.currentTime >= end - 0.06) finish();
+      if (v.currentTime >= end - 1.5 / FPS) {
+        v.pause();
+        v.currentTime = end;
+        finish();
+        return;
+      }
+      watch = requestAnimationFrame(onTime);
     };
-    v.addEventListener("timeupdate", onTime);
+    watch = requestAnimationFrame(onTime);
     v.addEventListener("ended", finish);
     v.play().catch(finish);
     // Never trap the visitor if the video stalls.
     const guard = window.setTimeout(finish, (manifest.motion[0].duration + 6) * 1000);
     return () => {
-      v.removeEventListener("timeupdate", onTime);
+      cancelAnimationFrame(watch);
       v.removeEventListener("ended", finish);
       window.clearTimeout(guard);
       document.documentElement.style.overflow = "";
     };
   }, []);
 
-  // Scroll loop: map scroll to a segment, scrub the motion clip, swap layers, fade copy.
+  // Scroll loop. Two layers show the scene: the motion clip (scrubbed by scroll) and the
+  // rest loop of the current section. They only ever swap on a frame both show
+  // identically, so there is no fade and no jump:
+  //   motion j -> rest j     motion settles on its last frame, rest starts at frame 0
+  //   motion j -> rest j-1   motion settles on its first frame, rest starts at its peak
+  //   rest k  -> motion k+1  rest scrubs to its peak (the pair's last frame), which is
+  //                          the first frame of motion k+1
+  //   rest k  -> motion k    rest scrubs back to frame 0, next to motion k's last frame
   useEffect(() => {
     if (phase !== "live") return;
     const v = motionRef.current!;
+    const rests = restRefs.current;
     let raf = 0;
-    let current = manifest.motion[0].start + manifest.motion[0].duration - 0.02;
-    let lastKey = "";
+    let last = performance.now();
     let lastSection = -1;
+    // What is on screen, and a pending swap waiting for its target frame to decode.
+    let shown: { kind: "rest" | "motion"; index: number } = { kind: "rest", index: 0 };
+    let pending: { kind: "rest" | "motion"; index: number } | null = null;
+    let current = motionLast(0);
+    const copyShown: number[] = [1];
 
-    const tick = () => {
+    const restSeg = (k: number) => TRACK.segs.find((s) => s.kind === "rest" && s.index === k)!;
+    const layer = (kind: "rest" | "motion", index: number) => {
+      v.style.opacity = kind === "motion" ? "1" : "0";
+      rests.forEach((r, i) => {
+        if (!r) return;
+        const on = kind === "rest" && i === index;
+        r.style.opacity = on ? "1" : "0";
+        if (!on && !r.paused) r.pause();
+      });
+    };
+    const startRest = (k: number, t: number) => {
+      const r = rests[k];
+      if (!r) return;
+      r.currentTime = t;
+      pending = { kind: "rest", index: k };
+    };
+
+    // The intro ended on motion 0's last frame; rest 0 picks up at its frame 0.
+    shown = { kind: "motion", index: 0 };
+    startRest(0, frameTime(0));
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.25, (now - last) / 1000);
+      last = now;
       const vh = window.innerHeight / 100;
       const y = window.scrollY / vh;
       const seg = TRACK.segs.find((s) => y >= s.start && y < s.start + s.length) ?? TRACK.segs[TRACK.segs.length - 1];
 
-      if (seg.kind === "motion") {
-        const m = manifest.motion[seg.index];
-        const p = Math.min(1, Math.max(0, (y - seg.start) / seg.length));
-        const target = m.start + p * (m.duration - 0.04);
-        current += (target - current) * 0.18;
-        if (Math.abs(target - current) < 0.002) current = target;
-        if (!v.seeking && Math.abs(v.currentTime - current) > 0.012) v.currentTime = current;
-      }
-
-      const key = `${seg.kind}${seg.index}`;
-      if (key !== lastKey) {
-        lastKey = key;
-        setActive({ kind: seg.kind, index: seg.index });
-        restRefs.current.forEach((r, i) => {
-          if (!r) return;
-          if (seg.kind === "rest" && i === seg.index) {
-            r.currentTime = 0;
-            r.play().catch(() => {});
-          } else if (!r.paused) r.pause();
-        });
-        if (seg.kind === "rest") {
-          // Park the motion layer on the clip boundary so leaving the rest is seamless.
-          const m = manifest.motion[seg.index];
-          current = m.start + m.duration - 0.02;
-          v.currentTime = current;
+      if (pending) {
+        // Swap only once the incoming layer has decoded its target frame.
+        const el = pending.kind === "motion" ? v : rests[pending.index];
+        if (el && !el.seeking && el.readyState >= 2) {
+          shown = pending;
+          pending = null;
+          layer(shown.kind, shown.index);
+          if (shown.kind === "rest") rests[shown.index]?.play().catch(() => {});
+        }
+      } else if (shown.kind === "rest") {
+        const k = shown.index;
+        const r = rests[k];
+        const inOwnRest = seg.kind === "rest" && seg.index === k;
+        if (r && !inOwnRest) {
+          // Leaving the rest: scrub the idle loop to the frame it shares with the
+          // neighbouring motion clip (fast, but through every frame), then hand over.
+          const down = seg.start > restSeg(k).start;
+          if (!r.paused) r.pause();
+          const peak = frameTime(manifest.rest[k].peakFrame);
+          const end = frameTime(manifest.rest[k].frames - 1);
+          const goal = down ? peak : r.currentTime > peak ? end : frameTime(0);
+          const diff = goal - r.currentTime;
+          if (Math.abs(diff) < 0.5 / FPS) {
+            const j = down ? k + 1 : k;
+            current = down ? motionFirst(j) : motionLast(j);
+            v.currentTime = current;
+            pending = { kind: "motion", index: j };
+          } else if (!r.seeking) {
+            // Time-based so slow devices catch up as fast as quick ones.
+            const step = Math.sign(diff) * Math.min(Math.abs(diff), Math.max(dt * 6, Math.abs(diff) * (1 - Math.exp(-dt * 14))));
+            r.currentTime = r.currentTime + step;
+          }
+        }
+      } else {
+        const j = shown.index;
+        let target: number;
+        let arrive: number | null = null; // rest to hand over to once the motion lands
+        if (seg.kind === "motion" && seg.index === j) {
+          const p = Math.min(1, Math.max(0, (y - seg.start) / seg.length));
+          target = motionFirst(j) + p * (motionLast(j) - motionFirst(j));
+        } else if (seg.start >= restSeg(j).start) {
+          // Scroll is past this clip: land on its last frame and hand over to rest j.
+          target = motionLast(j);
+          arrive = j;
+        } else {
+          // Scroll is before this clip: land on its first frame and hand back to rest j-1.
+          target = motionFirst(j);
+          arrive = j - 1;
+        }
+        current += (target - current) * (1 - Math.exp(-dt * 12));
+        if (Math.abs(target - current) < 0.004) current = target;
+        if (!v.seeking && Math.abs(v.currentTime - current) > 0.01) v.currentTime = current;
+        if (arrive !== null && current === target && !v.seeking) {
+          startRest(arrive, arrive === j ? frameTime(0) : frameTime(manifest.rest[arrive].peakFrame));
         }
       }
 
@@ -171,9 +248,19 @@ export default function HeroStage() {
         setSection(sec);
       }
 
+      // Copy follows the scroll, but only once the picture has reached its section.
+      const onScreen = (i: number) =>
+        (shown.kind === "rest" && shown.index === i) ||
+        // leaving rest i (its copy fades out with the scroll)
+        (shown.kind === "motion" && shown.index === i + 1) ||
+        // arriving at rest i: only once the picture is nearly parked
+        (shown.kind === "motion" && shown.index === i && current > motionLast(i) - 0.35);
       copyRefs.current.forEach((el, i) => {
         if (!el) return;
-        const o = copyOpacity(i, y);
+        const want = onScreen(i) ? copyOpacity(i, y) : 0;
+        const prev = copyShown[i] ?? want;
+        const o = prev + (want - prev) * (1 - Math.exp(-dt * 10));
+        copyShown[i] = Math.abs(o - want) < 0.005 ? want : o;
         el.style.opacity = String(o);
         el.style.visibility = o < 0.01 ? "hidden" : "visible";
         el.style.setProperty("--enter", String(1 - o));
@@ -207,7 +294,6 @@ export default function HeroStage() {
     window.scrollTo({ top: (rest.start + rest.length * 0.3) * vh, behavior: "smooth" });
   };
 
-  const showRest = phase === "live" && active.kind === "rest";
   const labels = ["Cover", "The world", "Proof", "The problem", "The vision", "Team", "Contact"];
 
   return (
@@ -224,7 +310,7 @@ export default function HeroStage() {
           muted
           playsInline
           preload="auto"
-          style={{ opacity: showRest ? 0 : 1 }}
+          style={{ opacity: 1 }}
         />
         {manifest.rest.map((r, i) => (
           <video
@@ -238,7 +324,7 @@ export default function HeroStage() {
             loop
             playsInline
             preload={Math.abs(i - section) <= 1 ? "auto" : "metadata"}
-            style={{ opacity: showRest && active.index === i ? 1 : 0 }}
+            style={{ opacity: 0 }}
           />
         ))}
         <div className="stage-vignette" />
@@ -451,15 +537,15 @@ export default function HeroStage() {
 const PORTRAIT_FOCUS = [68, 50, 45, 62, 45, 50, 70];
 
 /**
- * Where each team circle hangs, measured on the Seedance Team rest frame: x is the
+ * Where each team circle hangs, measured on the chained Seedance Team rest frame: x is the
  * character's centre and `bottom` sits just above its head (percent of the frame).
- * Left to right: banana gorilla, Tung, Cappuccina, coffee-cup ninja, Tralalero, Tim Cheese.
+ * Left to right: banana gorilla, Tralalero, Cappuccina, Tung, coffee-cup ninja, Tim Cheese.
  */
 const TEAM_POS = [
-  { x: 23.5, bottom: 30 },
-  { x: 35.8, bottom: 25.5 },
-  { x: 44.6, bottom: 38 },
-  { x: 53.6, bottom: 41 },
-  { x: 64.2, bottom: 50 },
-  { x: 73.2, bottom: 28 },
+  { x: 23.4, bottom: 41.5 },
+  { x: 36.7, bottom: 52.5 },
+  { x: 46.6, bottom: 43 },
+  { x: 55.3, bottom: 37.8 },
+  { x: 66, bottom: 47 },
+  { x: 76.6, bottom: 45.5 },
 ];

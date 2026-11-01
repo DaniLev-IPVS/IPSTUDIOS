@@ -4,84 +4,112 @@
   "motion": [
     {
       "name": "P1-cover",
+      "startFrame": 0,
+      "frames": 140,
       "start": 0.0,
       "duration": 5.8333
     },
     {
       "name": "P2-world",
+      "startFrame": 140,
+      "frames": 357,
       "start": 5.8333,
-      "duration": 14.7917
+      "duration": 14.875
     },
     {
       "name": "P3-proof",
-      "start": 20.625,
-      "duration": 12.7083
+      "startFrame": 497,
+      "frames": 307,
+      "start": 20.7083,
+      "duration": 12.7917
     },
     {
       "name": "P4-problem",
-      "start": 33.3333,
-      "duration": 13.0833
+      "startFrame": 804,
+      "frames": 315,
+      "start": 33.5,
+      "duration": 13.125
     },
     {
       "name": "P5-vision",
-      "start": 46.4167,
-      "duration": 17.4167
+      "startFrame": 1119,
+      "frames": 420,
+      "start": 46.625,
+      "duration": 17.5
     },
     {
       "name": "P6-team",
-      "start": 63.8333,
+      "startFrame": 1539,
+      "frames": 149,
+      "start": 64.125,
       "duration": 6.2083
     },
     {
       "name": "P7-contact",
-      "start": 70.0417,
-      "duration": 5.3333
+      "startFrame": 1688,
+      "frames": 127,
+      "start": 70.3333,
+      "duration": 5.2917
     }
   ],
   "rest": [
     {
       "name": "P1-cover",
       "src": "/hero/r1.mp4",
-      "duration": 9.75
+      "frames": 232,
+      "peakFrame": 116,
+      "duration": 9.6667
     },
     {
       "name": "P2-world",
       "src": "/hero/r2.mp4",
+      "frames": 236,
+      "peakFrame": 118,
       "duration": 9.8333
     },
     {
       "name": "P3-proof",
       "src": "/hero/r3.mp4",
-      "duration": 12.0
+      "frames": 286,
+      "peakFrame": 143,
+      "duration": 11.9167
     },
     {
       "name": "P4-problem",
       "src": "/hero/r4.mp4",
-      "duration": 9.9167
+      "frames": 236,
+      "peakFrame": 118,
+      "duration": 9.8333
     },
     {
       "name": "P5-vision",
       "src": "/hero/r5.mp4",
+      "frames": 238,
+      "peakFrame": 119,
       "duration": 9.9167
     },
     {
       "name": "P6-team",
       "src": "/hero/r6.mp4",
-      "duration": 13.0
+      "frames": 310,
+      "peakFrame": 155,
+      "duration": 12.9167
     },
     {
       "name": "P7-contact",
       "src": "/hero/r7.mp4",
-      "duration": 15.4167
+      "frames": 364,
+      "peakFrame": 182,
+      "duration": 15.1667
     }
   ],
   "sources": {
-    "P1-cover": "seedance",
-    "P2-world": "seedance",
-    "P3-proof": "seedance",
-    "P4-problem": "seedance",
-    "P5-vision": "seedance",
-    "P6-team": "seedance",
-    "P7-contact": "seedance"
+    "P1-cover": "seedance-v2",
+    "P2-world": "seedance-v2",
+    "P3-proof": "seedance-v2",
+    "P4-problem": "seedance-v2",
+    "P5-vision": "seedance-v2",
+    "P6-team": "seedance-v2",
+    "P7-contact": "seedance-v2"
   }
 }
