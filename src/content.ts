@@ -280,10 +280,13 @@ export const sections = {
 };
 
 /** One short line per person for the team circles. Full bios stay in `team` and `advisors`. */
-export const teamCircles = [
+// photo: null renders an empty circle until a headshot is added to public/deck.
+export const teamCircles: { name: string; role: string; line: string; photo: string | null }[] = [
   { name: "Austin Lee", role: "CEO", line: "Former CMO, Pudgy Penguins", photo: "/deck/team-austin.png" },
   { name: "Blair Chapman III", role: "CSO", line: "Founder, The One Platform", photo: "/deck/team-blair.png" },
   { name: "Dan Rozenberg", role: "CBDO", line: "$100M+ in retail revenue", photo: "/deck/team-dan.png" },
+  { name: "Daniel Lipkovich", role: "COO", line: "Chief Operating Officer", photo: null },
+  { name: "Michael Naiman", role: "CPO", line: "Chief Production Officer", photo: null },
   { name: "Matt Karol", role: "Advisor", line: "Founder, Akashic Studios", photo: "/deck/advisor-matt.png" },
   { name: "Eyal Baumel", role: "Advisor", line: "Founder, Flywheel. Ex-CEO, Yoola", photo: "/deck/advisor-eyal.png" },
   { name: "Phil McKenzie", role: "Advisor", line: "Co-founder and COO, Goldfinch", photo: "/deck/advisor-phil.png" },
