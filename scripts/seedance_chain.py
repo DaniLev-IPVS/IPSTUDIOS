@@ -2,17 +2,20 @@
 
   prep N          build v2/src/PN.mp4 = last 2 s of the previous final + blocking pair; print prompt
   splice N FILE   align the Seedance output to the previous final's last frame and write the final
+
+Set HERO_MOBILE=1 for the 9:16 set: blocking from clips/mobile, finals in seedance/mobile.
 """
 import json, subprocess, sys, os
 import numpy as np
 
-REPO = "/Users/daniellipkovich/My Projects/IP VENTURES CODE/IP Studios"
+REPO = os.environ.get("HERO_REPO", "/Users/daniellipkovich/My Projects/IP VENTURES CODE/IP Studios")
+MOBILE = os.environ.get("HERO_MOBILE") == "1"
 W = os.environ.get("CHAIN_WORKDIR", "/tmp/seedance-chain")  # sources and downloads
-PAIRS = f"{REPO}/docs/hero/blocking/clips/pairs"
+PAIRS = f"{REPO}/docs/hero/blocking/clips/" + ("mobile" if MOBILE else "pairs")
 FINAL = f"{REPO}/docs/hero/seedance"
 NAMES = ["P1-cover", "P2-world", "P3-proof", "P4-problem", "P5-vision", "P6-team", "P7-contact"]
 PRE = 2.0   # seconds of the previous final prepended to each source
-FW, FH = 1280, 720
+FW, FH = (720, 1280) if MOBILE else (1280, 720)
 
 LOOK = ("Use Image 1 only for what each character looks like; do not copy Image 1's composition, framing or character size. "
         "Labels: TUNG TUNG TUNG SAHUR is the tall wooden log with big round eyes, thin wooden arms and legs and a wooden baseball bat; "
@@ -39,7 +42,7 @@ CASTD = {
  "gor": "BANANA GORILLA is the green chimp in a peeled banana",
  "zeb": "WATERMELON ZEBRA is the zebra with a watermelon body",
 }
-WHO = {2: ["tung", "capp", "trala", "pata"], 3: ["tung", "capp", "trala", "pata", "cheese", "ninja"], 4: ["tung"],
+WHO = {1: ["tung"], 2: ["tung", "capp", "trala", "pata"], 3: ["tung", "capp", "trala", "pata", "cheese", "ninja"], 4: ["tung"],
        5: list(CASTD), 6: list(CASTD), 7: list(CASTD)}
 B = "https://6hggvldisl97ymdx.public.blob.vercel-storage.com/projects/cmvvp4osz0001k1079l7ijaw4/external-inputs/"
 REF = {"tung": B + "1793568839195-crop-tung.jpg", "capp": B + "1793568839729-crop-capp.jpg", "trala": B + "1793568840217-crop-trala.jpg",
@@ -86,6 +89,39 @@ BEATS = {
      "floor in the front left. The centre of the frame and the entire upper half stay empty.", ""),
 }
 
+# Mobile restages World, Team and Contact (see scripts/build_mobile_blend.py).
+MOBILE_BEATS = {
+ 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina pirouettes in from the left, Brr Brr Patapim lumbers in from the right and "
+     "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand at two depths in the "
+     "lower half of the frame, idling: Tung and Brr Brr Patapim further back, Ballerina Cappuccina at the front left and Tralalero Tralala at the front "
+     "right; the upper half of the frame empty.", ""),
+ 6: ("From 0:02 to 0:04 they ride the round pink stage down to the floor, then step off and walk into two staggered rows of four, and the stage sinks "
+     "away into the floor. From 0:08.3 to the end they stand in those rows, idling. Back row, left to right: watermelon zebra, Brr Brr Patapim, banana "
+     "gorilla, coffee-cup ninja. Front row, left to right: Tralalero Tralala, Ballerina Cappuccina, Tung Tung Tung Sahur, Tim Cheese. All of them in the "
+     "lower half of the frame, the entire upper half empty.", ""),
+ 7: ("From 0:02 to 0:07.4 they break the rows and walk off in different directions, nobody leaves the frame. From 0:07.4 to the end they are spread out "
+     "and relaxed: Tung Tung Tung Sahur stands closest to the camera, just right of centre at the bottom of the frame; the watermelon zebra, banana gorilla, "
+     "Tralalero Tralala and Tim Cheese idle further back along the left edge (Tim Cheese sits on the floor, Tralalero bounces on the spot); Brr Brr Patapim, "
+     "Ballerina Cappuccina and the coffee-cup ninja idle further back along the right edge (the ninja sits on the floor). The entire upper half stays empty.", ""),
+}
+if MOBILE:
+    BEATS.update(MOBILE_BEATS)
+    # The portrait blocking shows a lot of dark-red backdrop; without this Seedance turns it into a flat red wall.
+    VOID += (". The space behind the characters stays as dark as in the first two seconds, mostly black with only a faint low red glow; "
+             "it never becomes a red wall, curtain or backdrop")
+
+
+def prompt1():
+    return ("Edit Video 1 in three ways. First, erase the floating white words (the character name label) and replace them with empty background, so the "
+            "result contains no words or letters at all. Second, replace the grey block figure with TUNG TUNG TUNG SAHUR from Image 1 (the tall wooden log "
+            "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
+            "only for what he looks like; do not copy its framing or size. He walks in from far back on the right, crosses toward the centre and walks "
+            "forward, then settles just right of centre with his feet near the bottom of the frame and idles to the end: breathing, shifting his weight, "
+            "glancing around, tapping the bat. He keeps the exact size, screen position and path of the block figure at every moment. Third, restyle the "
+            "background: " + VOID + ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. "
+            "Cinematic 3D animated film look.")
+
+
 def prompt(n):
     beat, extra = BEATS[n]
     return ("Edit Video 1 in four ways. First, Video 1 from 0:00 to 0:02 is already finished footage: keep those two seconds exactly unchanged. "
@@ -113,7 +149,7 @@ def read_frames(f, start=0, count=None):
     a = np.frombuffer(raw, np.uint8).reshape(-1, FH, FW, 3)
     return a[start:start + count] if count else a[start:]
 
-def final_path(n): return f"{FINAL}/v2/{NAMES[n-1]}.mp4"
+def final_path(n): return f"{FINAL}/{'mobile' if MOBILE else 'v2'}/{NAMES[n-1]}.mp4"
 
 def prep(n):
     os.makedirs(f"{W}/src", exist_ok=True)
@@ -129,9 +165,10 @@ def prep(n):
            f"[0:v]scale={FW}:{FH},fps=24,trim=start_frame={nf-int(PRE*24)},setpts=PTS-STARTPTS[a];"
            f"[1:v]scale={FW}:{FH},fps=24,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1[v]", "-map", "[v]", *enc, out)
     print(out, os.path.getsize(out) / 1e6, "MB", probe_frames(out) / 24, "s")
-    if n > 1:
-        open(f"{W}/src/{NAMES[n-1]}.txt", "w").write(prompt(n))
-        print(prompt(n)); print(json.dumps(refs(n)))
+    if n > 1 or MOBILE:
+        text = prompt(n) if n > 1 else prompt1()
+        open(f"{W}/src/{NAMES[n-1]}.txt", "w").write(text)
+        print(text); print(json.dumps(refs(n)))
 
 def write_video(frames, out):
     os.makedirs(os.path.dirname(out), exist_ok=True)

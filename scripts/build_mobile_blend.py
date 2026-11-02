@@ -234,6 +234,11 @@ for n in CH:
 for g in ("Giant_0", "Giant_1", "Giant_2"):
     sc.objects[g].delta_location = (0, 0, -3.5)
 
+# The tilted-up portrait camera sees far more of the dome, and Seedance reads its
+# red as a wall. Dim it so the backdrop stays close to the black void of the finals.
+dome = sc.objects["Dome"].active_material
+next(n for n in dome.node_tree.nodes if n.type == "EMISSION").inputs["Strength"].default_value = 0.08
+
 # ------------------------------------------------------------ output
 for o in sc.objects:
     if o.name.startswith("Phone_"):
