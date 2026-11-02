@@ -337,7 +337,7 @@ export default function HeroStage() {
               copyRefs.current[0] = el;
             }}
             className="copy copy-cover"
-            style={{ left: "50%", top: "6%", width: "60%" }}
+            style={{ left: "50%", top: "50%", width: "48%" }}
           >
             <p className={`eyebrow !tracking-[0.9em] ${phase === "intro" ? "rise" : ""}`}>{brand.year}</p>
             <h1 className={`m-0 ${phase === "intro" ? "rise rise-1" : ""}`}>
@@ -480,8 +480,12 @@ export default function HeroStage() {
             <ul className="team-row">
               {teamCircles.map((p, i) => (
                 <li key={p.name} className="team-person" style={{ left: `${TEAM_POS[i].x}%`, top: `${TEAM_POS[i].bottom}%` }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.photo} alt="" className="team-photo" />
+                  {p.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.photo} alt="" className="team-photo" />
+                  ) : (
+                    <span className="team-photo team-photo-empty" aria-hidden />
+                  )}
                   <span className="display team-name">{p.name}</span>
                   <span className="team-role">{p.role}</span>
                   <span className="team-line">{p.line}</span>
@@ -539,13 +543,16 @@ const PORTRAIT_FOCUS = [68, 50, 45, 62, 45, 50, 70];
 /**
  * Where each team circle hangs, measured on the chained Seedance Team rest frame: x is the
  * character's centre and `bottom` sits just above its head (percent of the frame).
- * Left to right: banana gorilla, Tralalero, Cappuccina, Tung, coffee-cup ninja, Tim Cheese.
+ * Left to right: watermelon zebra, banana gorilla, Tralalero, Cappuccina, Tung,
+ * coffee-cup ninja, Tim Cheese, Brr Brr Patapim. Order matches teamCircles.
  */
 const TEAM_POS = [
+  { x: 8, bottom: 32.5 },
   { x: 23.4, bottom: 41.5 },
   { x: 36.7, bottom: 52.5 },
   { x: 46.6, bottom: 43 },
   { x: 55.3, bottom: 37.8 },
   { x: 66, bottom: 47 },
   { x: 76.6, bottom: 45.5 },
+  { x: 87.5, bottom: 31 },
 ];
