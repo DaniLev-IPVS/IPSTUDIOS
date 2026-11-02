@@ -25,20 +25,24 @@ import { brand, contactEmail, sections, teamCircles, viralStats } from "@/conten
 type Seg = { kind: "rest" | "motion"; index: number; start: number; length: number };
 type Manifest = typeof desktopManifest;
 
-const REST_VH = 120; // scroll length of a rest, in viewport heights
-const VH_PER_SECOND = 13; // scroll length per second of motion
-const LAST_REST_VH = 100;
+/** Scroll lengths in viewport heights: per rest, per second of motion, minimum per motion. */
+type Pace = { rest: number; lastRest: number; perSecond: number; minMotion: number };
+const DESKTOP_PACE: Pace = { rest: 120, lastRest: 100, perSecond: 13, minMotion: 90 };
+// Phones scroll a much shorter track and snap to the rests (see the scroll loop).
+const MOBILE_PACE: Pace = { rest: 50, lastRest: 60, perSecond: 5, minMotion: 45 };
+/** Where a rest is parked: this fraction of the way into its scroll segment. */
+const REST_POINT = 0.3;
 
-function buildTrack(manifest: Manifest): { segs: Seg[]; total: number } {
+function buildTrack(manifest: Manifest, pace: Pace): { segs: Seg[]; total: number } {
   const segs: Seg[] = [];
   let y = 0;
   for (let i = 0; i < manifest.rest.length; i++) {
-    const length = i === manifest.rest.length - 1 ? LAST_REST_VH : REST_VH;
+    const length = i === manifest.rest.length - 1 ? pace.lastRest : pace.rest;
     segs.push({ kind: "rest", index: i, start: y, length });
     y += length;
     const m = manifest.motion[i + 1];
     if (m) {
-      const len = Math.max(90, m.duration * VH_PER_SECOND);
+      const len = Math.max(pace.minMotion, m.duration * pace.perSecond);
       segs.push({ kind: "motion", index: i + 1, start: y, length: len });
       y += len;
     }
@@ -57,10 +61,12 @@ const frameTime = (f: number) => (f + 0.5) / FPS;
 
 /** One video set (desktop 16:9 or mobile 9:16) and the scroll track built from it. */
 function makeHero(manifest: Manifest, portrait: boolean) {
-  const track = buildTrack(manifest);
+  const track = buildTrack(manifest, portrait ? MOBILE_PACE : DESKTOP_PACE);
   return {
     manifest,
     portrait,
+    /** Finish a move on its own when the visitor stops scrolling mid-way. */
+    snap: portrait,
     track,
     motionFirst: (j: number) => frameTime(manifest.motion[j].startFrame),
     motionLast: (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1),
@@ -207,10 +213,62 @@ export default function HeroStage() {
     shown = { kind: "motion", index: 0 };
     startRest(0, frameTime(0));
 
+    // Snap: when the visitor stops scrolling inside a move, keep scrolling for them to the
+    // rest they were heading for, so the move plays through and parks. Any touch, wheel or
+    // key hands control straight back.
+    let dir = 1;
+    let lastY = window.scrollY;
+    let touching = false;
+    let idleSince = performance.now();
+    let auto: { from: number; to: number; t0: number; dur: number } | null = null;
+    const onScroll = () => {
+      if (!auto && window.scrollY !== lastY) dir = window.scrollY > lastY ? 1 : -1;
+      lastY = window.scrollY;
+      if (!auto) idleSince = performance.now();
+    };
+    const takeOver = () => {
+      auto = null;
+      idleSince = performance.now();
+    };
+    const onTouchStart = () => {
+      touching = true;
+      takeOver();
+    };
+    const onTouchEnd = () => {
+      touching = false;
+      idleSince = performance.now();
+    };
+    if (hero.snap) {
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchend", onTouchEnd, { passive: true });
+      window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+      window.addEventListener("wheel", takeOver, { passive: true });
+      window.addEventListener("keydown", takeOver);
+    }
+
     const tick = (now: number) => {
       const dt = Math.min(0.25, (now - last) / 1000);
       last = now;
       const vh = window.innerHeight / 100;
+
+      if (auto) {
+        const t = Math.min(1, (now - auto.t0) / auto.dur);
+        window.scrollTo({ top: (auto.from + (auto.to - auto.from) * smooth(t)) * vh, behavior: "instant" });
+        lastY = window.scrollY;
+        if (t >= 1) takeOver();
+      } else if (hero.snap && !touching && now - idleSince > 160) {
+        const y0 = window.scrollY / vh;
+        const s0 = TRACK.segs.find((s) => y0 >= s.start && y0 < s.start + s.length);
+        if (s0?.kind === "motion") {
+          const goal = restSeg(dir > 0 ? s0.index : s0.index - 1);
+          const to = goal.start + goal.length * REST_POINT;
+          // Play the rest of the move at about 2.5x, never longer than five seconds.
+          const left = (Math.abs(to - y0) / s0.length) * manifest.motion[s0.index].duration;
+          auto = { from: y0, to, t0: now, dur: Math.min(5000, Math.max(600, (left / 2.5) * 1000)) };
+        }
+      }
+
       const y = window.scrollY / vh;
       const seg = TRACK.segs.find((s) => y >= s.start && y < s.start + s.length) ?? TRACK.segs[TRACK.segs.length - 1];
 
@@ -298,7 +356,15 @@ export default function HeroStage() {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+      window.removeEventListener("wheel", takeOver);
+      window.removeEventListener("keydown", takeOver);
+    };
   }, [phase, hero]);
 
   // On portrait screens that still get the 16:9 set (tablets), the frame is cropped to
@@ -322,7 +388,7 @@ export default function HeroStage() {
     if (!hero) return;
     const rest = hero.track.segs.find((s) => s.kind === "rest" && s.index === i)!;
     const vh = window.innerHeight / 100;
-    window.scrollTo({ top: (rest.start + rest.length * 0.3) * vh, behavior: "smooth" });
+    window.scrollTo({ top: (rest.start + rest.length * REST_POINT) * vh, behavior: "smooth" });
   };
 
   const labels = ["Cover", "The world", "Proof", "The problem", "The vision", "Team", "Contact"];
