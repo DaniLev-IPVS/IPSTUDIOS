@@ -12,7 +12,8 @@ import { brand, contactEmail, sections, teamCircles, viralStats } from "@/conten
  *
  *   M1 (cover)  autoplays once on load with scrolling locked.
  *   R1..R7      rest loops: the camera is parked, the characters idle, the copy is up.
- *   M2..M7      motion clips, scrubbed by scroll between two rests.
+ *   M2..M7      motion clips between two rests. One swipe, wheel flick or arrow key plays
+ *               the next one at normal speed; another gesture mid-move pauses it.
  *
  * All motion clips live in one file (motion.mp4) back to back; manifest.json holds
  * each clip's offset in frames. The Seedance pairs are chained: the first frame of every
@@ -28,10 +29,11 @@ type Manifest = typeof desktopManifest;
 /** Scroll lengths in viewport heights: per rest, per second of motion, minimum per motion. */
 type Pace = { rest: number; lastRest: number; perSecond: number; minMotion: number };
 const DESKTOP_PACE: Pace = { rest: 120, lastRest: 100, perSecond: 13, minMotion: 90 };
-// Phones: the scroll is held back to the picture and snaps to the rests (see the scroll loop).
 const MOBILE_PACE: Pace = { rest: 60, lastRest: 70, perSecond: 10, minMotion: 60 };
 /** Where a rest is parked: this fraction of the way into its scroll segment. */
 const REST_POINT = 0.3;
+/** Speed a move plays at once a gesture starts it: 1 is the footage's own speed. */
+const PLAY_RATE = 1;
 
 function buildTrack(manifest: Manifest, pace: Pace): { segs: Seg[]; total: number } {
   const segs: Seg[] = [];
@@ -65,22 +67,15 @@ function makeHero(manifest: Manifest, portrait: boolean) {
   return {
     manifest,
     portrait,
-    /** Finish a move on its own when the visitor stops scrolling mid-way. */
-    snap: portrait,
-    /** Hold the scroll between the rests either side of the picture, so it can't run ahead. */
-    gate: portrait,
     /**
-     * Fastest the picture may follow the scroll, in seconds of footage per second: motion
-     * clips at about real time, rest loops a little quicker so leaving a rest is not a wait.
-     * A fast flick then plays through at normal speed instead of racing; slow scrolls are
-     * untouched. Infinity keeps desktop as it was.
+     * Fastest a rest loop scrubs to the frame it hands over on, in seconds of footage per
+     * second, so leaving a rest is quick but never a jump.
      */
-    maxRate: portrait ? 1.1 : Infinity,
-    maxRestRate: portrait ? 3 : Infinity,
+    maxRestRate: 3,
     track,
     motionFirst: (j: number) => frameTime(manifest.motion[j].startFrame),
     motionLast: (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1),
-    /** Opacity of the copy for rest `i` at scroll position `y` (in vh). */
+    /** Opacity of the copy for rest `i` at track position `y` (in vh). */
     copyOpacity(i: number, y: number) {
       const rest = track.segs.find((s) => s.kind === "rest" && s.index === i)!;
       const next = track.segs.find((s) => s.kind === "motion" && s.index === i + 1);
@@ -108,8 +103,10 @@ export default function HeroStage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [section, setSection] = useState(0);
   const phaseRef = useRef<Phase>("intro");
-  // Rest a nav button is jumping to: the gate and the speed caps stand aside until it lands.
+  // Rest a nav button is jumping to: the speed cap stands aside until it lands.
   const jumpRef = useRef<number | null>(null);
+  // Set by the step loop: send the picture straight to rest k.
+  const jumpToRef = useRef<((k: number) => void) | null>(null);
   // Chosen once on load, so the videos never reload mid-scroll.
   const [hero, setHero] = useState<Hero | null>(null);
 
@@ -182,7 +179,7 @@ export default function HeroStage() {
     };
   }, [hero]);
 
-  // Scroll loop. Two layers show the scene: the motion clip (scrubbed by scroll) and the
+  // Step loop. Two layers show the scene: the motion clip (following `pos`) and the
   // rest loop of the current section. They only ever swap on a frame both show
   // identically, so there is no fade and no jump:
   //   motion j -> rest j     motion settles on its last frame, rest starts at frame 0
@@ -225,86 +222,122 @@ export default function HeroStage() {
     shown = { kind: "motion", index: 0 };
     startRest(0, frameTime(0));
 
-    // Snap: when the visitor stops scrolling inside a move, keep scrolling for them to the
-    // rest they were heading for, so the move plays through and parks. Any touch, wheel or
-    // key hands control straight back.
-    let dir = 1;
-    let lastY = window.scrollY;
-    let touching = false;
-    let idleSince = performance.now();
-    let auto: { from: number; to: number; t0: number; dur: number } | null = null;
-    const onScroll = () => {
-      if (!auto && window.scrollY !== lastY) dir = window.scrollY > lastY ? 1 : -1;
-      lastY = window.scrollY;
-      if (!auto) idleSince = performance.now();
-    };
-    const takeOver = () => {
-      auto = null;
+    // Steps: the page never scrolls. One swipe, wheel flick or arrow key plays the next
+    // (or previous) move at normal speed and parks on its rest. Another gesture while a
+    // move plays pauses it; the next one carries on, or turns back if it points the other way.
+    // `pos` is a position on the track (in vh) that the picture follows, as scroll once did.
+    const lastRest = manifest.rest.length - 1;
+    const park = (k: number) => restSeg(k).start + restSeg(k).length * REST_POINT;
+    const motionSeg = (j: number) => TRACK.segs.find((s) => s.kind === "motion" && s.index === j)!;
+    let pos = park(0);
+    let at = 0; // rest the picture is parked on, or leaving
+    let move: { j: number; dir: 1 | -1; paused: boolean } | null = null;
+
+    const step = (d: 1 | -1) => {
       jumpRef.current = null;
-      idleSince = performance.now();
+      if (move) {
+        if (!move.paused) move.paused = true;
+        else {
+          move.paused = false;
+          move.dir = d;
+        }
+        return;
+      }
+      if (at + d < 0 || at + d > lastRest) return;
+      const j = d > 0 ? at + 1 : at;
+      const m = motionSeg(j);
+      pos = d > 0 ? m.start : m.start + m.length - 0.001;
+      move = { j, dir: d, paused: false };
     };
-    const onTouchStart = () => {
-      touching = true;
-      takeOver();
+    jumpToRef.current = (k: number) => {
+      move = null;
+      at = k;
+      pos = park(k);
+      jumpRef.current = k;
     };
-    const onTouchEnd = () => {
-      touching = false;
-      idleSince = performance.now();
+
+    // A wheel or trackpad gesture is a burst of events; count each burst once. A burst
+    // ends after a short quiet gap, or when the deltas jump up again after dying down
+    // (a fresh flick during a trackpad's momentum tail).
+    let wheelLast = 0;
+    let wheelSum = 0;
+    let wheelAbs = 0;
+    let wheelFired = false;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const now = performance.now();
+      const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+      const a = Math.abs(d);
+      if (now - wheelLast > 220 || (wheelFired && wheelAbs < 12 && a > Math.max(30, wheelAbs * 4))) {
+        wheelSum = 0;
+        wheelFired = false;
+      }
+      wheelLast = now;
+      wheelAbs = a;
+      if (wheelFired) return;
+      wheelSum += d;
+      if (Math.abs(wheelSum) > 24) {
+        wheelFired = true;
+        step(wheelSum > 0 ? 1 : -1);
+      }
     };
-    if (hero.snap) {
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("touchstart", onTouchStart, { passive: true });
-      window.addEventListener("touchend", onTouchEnd, { passive: true });
-      window.addEventListener("touchcancel", onTouchEnd, { passive: true });
-      window.addEventListener("wheel", takeOver, { passive: true });
-      window.addEventListener("keydown", takeOver);
-    }
+    let touchY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => e.preventDefault();
+    const onTouchEnd = (e: TouchEvent) => {
+      if (touchY === null) return;
+      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
+      touchY = null;
+      if (Math.abs(dy) > 30) step(dy > 0 ? 1 : -1);
+      // A tap on the picture pauses or resumes a move (links and buttons keep working).
+      else if (move && !(e.target as Element | null)?.closest?.("a, button")) step(move.dir);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const d = { ArrowDown: 1, PageDown: 1, " ": 1, ArrowUp: -1, PageUp: -1 }[e.key] as 1 | -1 | undefined;
+      if (d) {
+        e.preventDefault();
+        step(e.key === " " && e.shiftKey ? -1 : d);
+      } else if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        jumpToRef.current?.(e.key === "Home" ? 0 : lastRest);
+      }
+    };
+    document.documentElement.style.overflow = "hidden";
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("keydown", onKey);
 
     const tick = (now: number) => {
       const dt = Math.min(0.25, (now - last) / 1000);
       last = now;
-      const vh = window.innerHeight / 100;
 
-      if (auto) {
-        const t = Math.min(1, (now - auto.t0) / auto.dur);
-        window.scrollTo({ top: (auto.from + (auto.to - auto.from) * smooth(t)) * vh, behavior: "instant" });
-        lastY = window.scrollY;
-        if (t >= 1) takeOver();
-      } else if (hero.snap && !touching && now - idleSince > 160) {
-        const y0 = window.scrollY / vh;
-        const s0 = TRACK.segs.find((s) => y0 >= s.start && y0 < s.start + s.length);
-        if (s0?.kind === "motion") {
-          const goal = restSeg(dir > 0 ? s0.index : s0.index - 1);
-          const to = goal.start + goal.length * REST_POINT;
-          // Scroll the rest of the move at the speed the picture is allowed to play it.
-          const left = (Math.abs(to - y0) / s0.length) * manifest.motion[s0.index].duration;
-          auto = { from: y0, to, t0: now, dur: Math.max(600, (left / hero.maxRate) * 1000) };
+      // Play the move: once the picture is on its clip, walk `pos` across it in real time.
+      if (move && !move.paused && !pending && shown.kind === "motion" && shown.index === move.j) {
+        const m = motionSeg(move.j);
+        pos += (move.dir * m.length * dt * PLAY_RATE) / manifest.motion[move.j].duration;
+        if (move.dir > 0 && pos >= m.start + m.length) {
+          at = move.j;
+          pos = park(at);
+          move = null;
+        } else if (move.dir < 0 && pos <= m.start) {
+          at = move.j - 1;
+          pos = park(at);
+          move = null;
         }
       }
 
       const jumping = jumpRef.current !== null;
       if (jumping && !pending && shown.kind === "rest" && shown.index === jumpRef.current) jumpRef.current = null;
-      if (hero.gate && !jumping) {
-        // The visitor may scroll anywhere between the rests either side of the picture, never
-        // beyond: past that the page waits for the move to play out, then lets them carry on.
-        const park = (k: number) => restSeg(k).start + restSeg(k).length * REST_POINT;
-        const lastRest = manifest.rest.length - 1;
-        const k = shown.index;
-        const [lo, hi] =
-          shown.kind === "rest"
-            ? [k > 0 ? park(k - 1) : 0, k < lastRest ? park(k + 1) : TRACK.total + 100]
-            : [k > 0 ? park(k - 1) : 0, park(k)];
-        const y0 = window.scrollY / vh;
-        const held = Math.min(hi, Math.max(lo, y0));
-        if (Math.abs(held - y0) > 0.2) {
-          window.scrollTo({ top: held * vh, behavior: "instant" });
-          lastY = window.scrollY;
-        }
-      }
-      const maxRate = jumping ? Infinity : hero.maxRate;
+      // The clip follows `pos` exactly; only a rest loop scrubbing to its hand-over frame is capped.
+      const maxRate = Infinity;
       const maxRestRate = jumping ? Infinity : hero.maxRestRate;
 
-      const y = window.scrollY / vh;
+      const y = pos;
       const seg = TRACK.segs.find((s) => y >= s.start && y < s.start + s.length) ?? TRACK.segs[TRACK.segs.length - 1];
 
       if (pending) {
@@ -373,10 +406,10 @@ export default function HeroStage() {
         setSection(sec);
       }
 
-      // Copy follows the scroll, but only once the picture has reached its section.
+      // Copy follows `pos`, but only once the picture has reached its section.
       const onScreen = (i: number) =>
         (shown.kind === "rest" && shown.index === i) ||
-        // leaving rest i (its copy fades out with the scroll)
+        // leaving rest i (its copy fades out as the move starts)
         (shown.kind === "motion" && shown.index === i + 1) ||
         // arriving at rest i: only once the picture is nearly parked
         (shown.kind === "motion" && shown.index === i && current > motionLast(i) - 0.35);
@@ -384,7 +417,7 @@ export default function HeroStage() {
         if (!el) return;
         const want = onScreen(i) ? copyOpacity(i, y) : 0;
         const prev = copyShown[i] ?? want;
-        const o = prev + (want - prev) * (1 - Math.exp(-dt * (hero.gate ? 16 : 10)));
+        const o = prev + (want - prev) * (1 - Math.exp(-dt * 14));
         copyShown[i] = Math.abs(o - want) < 0.005 ? want : o;
         el.style.opacity = String(o);
         el.style.visibility = o < 0.01 ? "hidden" : "visible";
@@ -396,12 +429,13 @@ export default function HeroStage() {
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchEnd);
-      window.removeEventListener("wheel", takeOver);
-      window.removeEventListener("keydown", takeOver);
+      window.removeEventListener("keydown", onKey);
+      jumpToRef.current = null;
+      document.documentElement.style.overflow = "";
     };
   }, [phase, hero]);
 
@@ -423,20 +457,13 @@ export default function HeroStage() {
   }, [section, hero]);
 
   const goTo = (i: number) => {
-    if (!hero) return;
-    const rest = hero.track.segs.find((s) => s.kind === "rest" && s.index === i)!;
-    const vh = window.innerHeight / 100;
-    jumpRef.current = i;
-    window.scrollTo({ top: (rest.start + rest.length * REST_POINT) * vh, behavior: "smooth" });
+    jumpToRef.current?.(i);
   };
 
   const labels = ["Cover", "The world", "Proof", "The problem", "The vision", "Team", "Contact"];
 
   return (
     <>
-      {/* Scroll track */}
-      <div aria-hidden style={{ height: `${(hero ?? DESKTOP).track.total + 100}vh` }} />
-
       <div ref={stageRef} className={`stage fixed inset-0 overflow-hidden bg-ink ${hero?.portrait ? "stage-portrait" : ""}`}>
         {hero && (
           <>
