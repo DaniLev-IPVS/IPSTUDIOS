@@ -104,12 +104,12 @@
     }
   ],
   "sources": {
-    "P1-cover": "seedance-v3",
-    "P2-world": "seedance-v3",
-    "P3-proof": "seedance-v3",
-    "P4-problem": "seedance-v3",
-    "P5-vision": "seedance-v3",
-    "P6-team": "seedance-v3",
-    "P7-contact": "seedance-v3"
+    "P1-cover": "seedance-v3-topaz",
+    "P2-world": "seedance-v3-topaz",
+    "P3-proof": "seedance-v3-topaz",
+    "P4-problem": "seedance-v3-topaz",
+    "P5-vision": "seedance-v3-topaz",
+    "P6-team": "seedance-v3-topaz",
+    "P7-contact": "seedance-v3-topaz"
   }
 }
