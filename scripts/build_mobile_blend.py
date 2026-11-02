@@ -230,6 +230,10 @@ for n in CH:
     d6.z = d7.z = 0
     key_delta(n, [(2200, ZERO), (2318, d6), (2485, d6), (2600, d7)])
 
+# Seedance draws Brr Brr Patapim far bigger than his block (about 1.5x Tung on desktop),
+# which in the narrow frame puts his head under the copy. A smaller block compensates.
+CH["pata"].delta_scale = (0.62, 0.62, 0.62)
+
 # Proof giants: sink them so their tops stay under the copy band.
 for g in ("Giant_0", "Giant_1", "Giant_2"):
     sc.objects[g].delta_location = (0, 0, -3.5)
@@ -237,7 +241,11 @@ for g in ("Giant_0", "Giant_1", "Giant_2"):
 # The tilted-up portrait camera sees far more of the dome, and Seedance reads its
 # red as a wall. Dim it so the backdrop stays close to the black void of the finals.
 dome = sc.objects["Dome"].active_material
-next(n for n in dome.node_tree.nodes if n.type == "EMISSION").inputs["Strength"].default_value = 0.08
+next(n for n in dome.node_tree.nodes if n.type == "EMISSION").inputs["Strength"].default_value = 0.04
+# The floor's emission glows into a band near the horizon; from the higher portrait camera
+# it reads as a stage edge, so switch it off. The haze comes from the Seedance prompt.
+floor = sc.objects["Floor"].active_material
+next(n for n in floor.node_tree.nodes if n.type == "BSDF_PRINCIPLED").inputs["Emission Strength"].default_value = 0.0
 
 # ------------------------------------------------------------ output
 for o in sc.objects:

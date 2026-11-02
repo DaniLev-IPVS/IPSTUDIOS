@@ -1,0 +1,115 @@
+{
+  "motionSrc": "/hero/m/motion.mp4",
+  "poster": "/hero/m/poster.jpg",
+  "motion": [
+    {
+      "name": "P1-cover",
+      "startFrame": 0,
+      "frames": 140,
+      "start": 0.0,
+      "duration": 5.8333
+    },
+    {
+      "name": "P2-world",
+      "startFrame": 140,
+      "frames": 356,
+      "start": 5.8333,
+      "duration": 14.8333
+    },
+    {
+      "name": "P3-proof",
+      "startFrame": 496,
+      "frames": 306,
+      "start": 20.6667,
+      "duration": 12.75
+    },
+    {
+      "name": "P4-problem",
+      "startFrame": 802,
+      "frames": 317,
+      "start": 33.4167,
+      "duration": 13.2083
+    },
+    {
+      "name": "P5-vision",
+      "startFrame": 1119,
+      "frames": 421,
+      "start": 46.625,
+      "duration": 17.5417
+    },
+    {
+      "name": "P6-team",
+      "startFrame": 1540,
+      "frames": 149,
+      "start": 64.1667,
+      "duration": 6.2083
+    },
+    {
+      "name": "P7-contact",
+      "startFrame": 1689,
+      "frames": 76,
+      "start": 70.375,
+      "duration": 3.1667
+    }
+  ],
+  "rest": [
+    {
+      "name": "P1-cover",
+      "src": "/hero/m/r1.mp4",
+      "frames": 232,
+      "peakFrame": 116,
+      "duration": 9.6667
+    },
+    {
+      "name": "P2-world",
+      "src": "/hero/m/r2.mp4",
+      "frames": 236,
+      "peakFrame": 118,
+      "duration": 9.8333
+    },
+    {
+      "name": "P3-proof",
+      "src": "/hero/m/r3.mp4",
+      "frames": 286,
+      "peakFrame": 143,
+      "duration": 11.9167
+    },
+    {
+      "name": "P4-problem",
+      "src": "/hero/m/r4.mp4",
+      "frames": 238,
+      "peakFrame": 119,
+      "duration": 9.9167
+    },
+    {
+      "name": "P5-vision",
+      "src": "/hero/m/r5.mp4",
+      "frames": 238,
+      "peakFrame": 119,
+      "duration": 9.9167
+    },
+    {
+      "name": "P6-team",
+      "src": "/hero/m/r6.mp4",
+      "frames": 308,
+      "peakFrame": 154,
+      "duration": 12.8333
+    },
+    {
+      "name": "P7-contact",
+      "src": "/hero/m/r7.mp4",
+      "frames": 220,
+      "peakFrame": 110,
+      "duration": 9.1667
+    }
+  ],
+  "sources": {
+    "P1-cover": "seedance-mobile",
+    "P2-world": "seedance-mobile",
+    "P3-proof": "seedance-mobile",
+    "P4-problem": "seedance-mobile",
+    "P5-vision": "seedance-mobile",
+    "P6-team": "seedance-mobile",
+    "P7-contact": "seedance-mobile"
+  }
+}

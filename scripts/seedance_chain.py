@@ -48,6 +48,10 @@ B = "https://6hggvldisl97ymdx.public.blob.vercel-storage.com/projects/cmvvp4osz0
 REF = {"tung": B + "1793568839195-crop-tung.jpg", "capp": B + "1793568839729-crop-capp.jpg", "trala": B + "1793568840217-crop-trala.jpg",
        "pata": B + "1793568841828-crop-pata.jpg", "cheese": B + "1793568842421-crop-cheese.jpg", "ninja": B + "1793568843453-crop-ninja.jpg",
        "gor": B + "1793568844394-crop-gor.jpg", "zeb": B + "1793568845890-crop-zeb.jpg"}
+if MOBILE:
+    # The close-up crop makes Seedance draw Patapim as a giant; padded so he is small in the picture.
+    REF["pata"] = B + "1793598170152-pata-small.jpg"
+    CASTD["pata"] = "BRR BRR PATAPIM is the moss-and-root creature with a long nose, small in the picture"
 def refs(n): return [REF[c] for c in WHO[n]]
 def labels(n):
     out = []
@@ -94,18 +98,26 @@ MOBILE_BEATS = {
  2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina pirouettes in from the left, Brr Brr Patapim lumbers in from the right and "
      "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand at two depths in the "
      "lower half of the frame, idling: Tung and Brr Brr Patapim further back, Ballerina Cappuccina at the front left and Tralalero Tralala at the front "
-     "right; the upper half of the frame empty.", ""),
+     "right; the upper half of the frame empty. Brr Brr Patapim is not a giant: he is only a little taller than Tung, stands beside him at the same "
+     "distance from the camera, and the top of his head stays level with Tung's head, below the middle of the frame.", ""),
  6: ("From 0:02 to 0:04 they ride the round pink stage down to the floor, then step off and walk into two staggered rows of four, and the stage sinks "
      "away into the floor. From 0:08.3 to the end they stand in those rows, idling. Back row, left to right: watermelon zebra, Brr Brr Patapim, banana "
      "gorilla, coffee-cup ninja. Front row, left to right: Tralalero Tralala, Ballerina Cappuccina, Tung Tung Tung Sahur, Tim Cheese. All of them in the "
      "lower half of the frame, the entire upper half empty.", ""),
- 7: ("From 0:02 to 0:07.4 they break the rows and walk off in different directions, nobody leaves the frame. From 0:07.4 to the end they are spread out "
+ 7: ("From 0:02 every figure is already its finished character; no grey block, statue or unfinished figure is ever visible. "
+     "From 0:02 to 0:07.4 they clearly break the two rows: each one turns and walks to a new spot, following its block figure's path, and they "
+     "never stand in rows again; nobody leaves the frame. From 0:07.4 to the end they are spread out "
      "and relaxed: Tung Tung Tung Sahur stands closest to the camera, just right of centre at the bottom of the frame; the watermelon zebra, banana gorilla, "
      "Tralalero Tralala and Tim Cheese idle further back along the left edge (Tim Cheese sits on the floor, Tralalero bounces on the spot); Brr Brr Patapim, "
      "Ballerina Cappuccina and the coffee-cup ninja idle further back along the right edge (the ninja sits on the floor). The entire upper half stays empty.", ""),
 }
 if MOBILE:
     BEATS.update(MOBILE_BEATS)
+    BEATS[3] = (BEATS[3][0], BEATS[3][1][:-1] + "; they stay low and far away, their tops below the middle of the frame.")
+    BEATS[4] = (BEATS[4][0] + " Tung stays small and far from the camera, exactly the size of the block figure: the top of his head is just below "
+                "the middle of the frame, never higher, and everything above the middle of the frame is empty dark space.", BEATS[4][1])
+    BEATS[5] = (BEATS[5][0] + " Everyone stays as small as their block figures: the whole group and the stage stay inside the middle band of the frame, "
+                "from about a third of the way down to about four fifths of the way down; the top third of the frame is empty dark space.", BEATS[5][1])
     # The portrait blocking shows a lot of dark-red backdrop; without this Seedance turns it into a flat red wall.
     VOID += (". The space behind the characters stays as dark as in the first two seconds, mostly black with only a faint low red glow; "
              "it never becomes a red wall, curtain or backdrop")
@@ -117,7 +129,8 @@ def prompt1():
             "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
             "only for what he looks like; do not copy its framing or size. He walks in from far back on the right, crosses toward the centre and walks "
             "forward, then settles just right of centre with his feet near the bottom of the frame and idles to the end: breathing, shifting his weight, "
-            "glancing around, tapping the bat. He keeps the exact size, screen position and path of the block figure at every moment. Third, restyle the "
+            "glancing around, tapping the bat. He keeps the exact size, screen position and path of the block figure at every moment: he stays small, "
+            "and even when he is closest to the camera the top of his head is just below the middle of the frame, never higher. Third, restyle the "
             "background: " + VOID + ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. "
             "Cinematic 3D animated film look.")
 
@@ -131,7 +144,8 @@ def prompt(n):
             "0:02 keeps looking exactly as it does there. Labels: " + labels(n) + ". " +
             (f"Exactly {WORDS[len(WHO[n])]} characters appear in this shot, one per block figure; " if len(WHO[n]) > 1 else "Only this one character appears; ") + "never add any other character. Use the images only for what each character looks like; do not copy their "
             "framing or size. " + beat + " Every character keeps the exact size, screen position and path of its block figure at "
-            "every moment, with lively, characterful animation; when standing they breathe, shift weight, glance around and fidget. "
+            "every moment" + (" (do not enlarge anyone: in this tall frame every head stays in the lower half of the frame, the upper half is "
+            "left empty for text)" if MOBILE and n != 7 else "") + ", with lively, characterful animation; when standing they breathe, shift weight, glance around and fidget. "
             "Fourth, from 0:02 onward the background stays exactly as it is from 0:00 to 0:02: " + VOID + "." + extra +
             " Keep the camera motion and the timing exactly as in Video 1. Cinematic 3D animated film look.")
 

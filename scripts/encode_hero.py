@@ -12,6 +12,9 @@ Outputs:
   public/hero/r1.mp4..r7   rest loops
   public/hero/poster.jpg   first frame, shown before the video loads
   src/hero/manifest.json   measured offsets and durations, read by the site
+
+With --mobile it builds the 9:16 set instead: sources from docs/hero/seedance/mobile
+(else the mobile blocking), outputs in public/hero/m and src/hero/manifest-mobile.json.
 """
 import json, pathlib, subprocess, sys
 
@@ -21,6 +24,11 @@ SEED2 = SEED / "v2"
 BLOCK = ROOT / "docs/hero/blocking/clips/pairs"
 OUT = ROOT / "public/hero"
 MANIFEST = ROOT / "src/hero/manifest.json"
+URL = "/hero"
+SOURCES = ((SEED2, "seedance-v2"), (SEED, "seedance"), (BLOCK, "blocking"))
+if "--mobile" in sys.argv:
+    OUT, MANIFEST, URL = OUT / "m", ROOT / "src/hero/manifest-mobile.json", "/hero/m"
+    SOURCES = ((SEED / "mobile", "seedance-mobile"), (ROOT / "docs/hero/blocking/clips/mobile", "blocking-mobile"))
 
 # name, motion frames, rest frames (24 fps, from the Blender timeline)
 PAIRS = [
@@ -32,11 +40,11 @@ PAIRS = [
     ("P6-team", 152, 159),
     ("P7-contact", 129, 187),
 ]
-VF = "scale=1280:720:flags=lanczos,fps=24,format=yuv420p"
+VF = ("scale=720:1280" if "--mobile" in sys.argv else "scale=1280:720") + ":flags=lanczos,fps=24,format=yuv420p"
 
 
 def source(name):
-    for d, kind in ((SEED2, "seedance-v2"), (SEED, "seedance"), (BLOCK, "blocking")):
+    for d, kind in SOURCES:
         for ext in (".mp4", ".mov"):
             p = d / (name + ext)
             if p.exists():
@@ -87,15 +95,15 @@ def main():
              "-map", "[o]", "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "23",
              "-x264-params", "keyint=6:min-keyint=1:scenecut=0:bframes=0",
              "-movflags", "+faststart", str(OUT / f"r{i}.mp4")])
-        rest.append({"name": name, "src": f"/hero/r{i}.mp4", "frames": 2 * r - 2, "peakFrame": r - 1,
+        rest.append({"name": name, "src": f"{URL}/r{i}.mp4", "frames": 2 * r - 2, "peakFrame": r - 1,
                      "duration": round((2 * r - 2) / 24, 4)})
         used[name] = kind
     t = f0 / 24
 
     run(["-i", str(plan[0][1]), "-vf", VF, "-frames:v", "1", "-q:v", "3", str(OUT / "poster.jpg")])
-    MANIFEST.write_text(json.dumps({"motionSrc": "/hero/motion.mp4", "poster": "/hero/poster.jpg",
+    MANIFEST.write_text(json.dumps({"motionSrc": f"{URL}/motion.mp4", "poster": f"{URL}/poster.jpg",
                                     "motion": motion, "rest": rest, "sources": used}, indent=2) + "\n")
-    size = sum(f.stat().st_size for f in OUT.glob("*")) / 1e6
+    size = sum(f.stat().st_size for f in OUT.glob("*") if f.is_file()) / 1e6
     print(f"motion {t:.2f}s, total {size:.1f} MB, sources: {used}")
 
 

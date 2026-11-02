@@ -718,3 +718,103 @@ html {
     transform: translateY(calc(-50% + var(--enter, 0) * 2cqh));
   }
 }
+
+/* Phones with the 9:16 set: the camera leaves the top of the frame clear, so each
+   block sits in its own band (docs/hero/mobile/wireframes.html) above the characters. */
+.stage-portrait .copy-cover {
+  top: 23svh !important;
+}
+.stage-portrait .copy-world {
+  top: 9.5svh !important;
+}
+.stage-portrait .copy-proof,
+.stage-portrait .copy-problem {
+  top: 8svh !important;
+}
+.stage-portrait .copy-proof .section-body,
+.stage-portrait .copy-problem .section-body,
+.stage-portrait .copy-problem .path-list {
+  font-size: 3.4vw;
+  line-height: 1.4;
+}
+.stage-portrait .copy-contact {
+  top: 11.5svh !important;
+}
+.stage-portrait .copy-vision,
+.stage-portrait .copy-team {
+  top: 8.5svh !important;
+}
+
+/* Vision: what goes in above the rising stage, what comes out below it. */
+.stage-portrait .copy-vision {
+  bottom: 1.5svh;
+}
+.stage-portrait .copy-vision::before {
+  display: none;
+}
+.stage-portrait .vision-head,
+.stage-portrait .vision-left {
+  /* so each backing wraps its own block, not the whole frame-tall Vision box */
+  position: relative;
+  left: auto;
+  top: auto;
+}
+.stage-portrait .vision-head::before,
+.stage-portrait .vision-col::before {
+  display: block;
+  inset: -1.5svh -3vw;
+  filter: blur(3vw);
+}
+.stage-portrait .vision-left .section-body {
+  display: none;
+}
+.stage-portrait .vision-right {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  margin: 0;
+}
+.stage-portrait .vision-outputs {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1svh 3vw;
+  margin-top: 1svh;
+}
+.stage-portrait .vision-outputs .display {
+  font-size: 4.2vw;
+}
+
+/* Team: eight circles in a 4 x 2 grid over the two rows of characters. */
+.stage-portrait .team-row {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.4svh 2vw;
+  margin-top: 2.4svh;
+}
+.stage-portrait .team-photo {
+  width: 14vw;
+  height: 14vw;
+}
+.stage-portrait .team-name {
+  font-size: 3vw;
+  white-space: normal;
+}
+.stage-portrait .team-role {
+  font-size: 2.2vw;
+}
+.stage-portrait .team-line {
+  font-size: 2.3vw;
+}
+/* Proof is the longest block; keep it clear of Tung's head on the raised platform. */
+.stage-portrait .copy-proof .section-title {
+  font-size: 7.6vw;
+}
+.stage-portrait .copy-proof .section-sub {
+  font-size: 4.2vw;
+}
+.stage-portrait .copy-proof .stat-value {
+  font-size: 5.6vw;
+}
+.stage-portrait .copy-proof .stat-list {
+  margin-top: 1svh;
+}

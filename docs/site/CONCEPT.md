@@ -158,3 +158,23 @@ Seedance plan: each M clip is one EDIT task (all between 4 and 20 s). Each R cli
 - **Look.** Screens removed; the floor is endless and fades into fog with no edge lights. Prompts list only the characters in each section and use one reference crop per character.
 - **Site handoff.** No fades between video layers. A rest loop scrubs to the frame it shares with the next motion clip before handing over, and a motion clip lands on its first or last frame before handing back. Copy appears only once the picture has reached its section. Text blocks have a soft dark backing.
 - Spend for this revision was about $60 on Vibecreate, including retakes of P1, P2 and P6.
+
+## 9. Mobile 9:16 set (2 Nov 2026)
+
+- **Wireframes:** `docs/hero/mobile/wireframes.html`, approved by Daniel. Copy sits in a band at the top of the frame, the cast in the lower half.
+- **Blocking:** `docs/hero/blocking/ipstudios-hero-blocking-mobile.blend`, generated from the desktop scene by `scripts/build_mobile_blend.py`. The desktop .blend is never saved.
+  - 720x1280, same timeline and markers, one continuous camera path.
+  - Rest framings are solved from the wireframes.
+  - World, Team and Contact are restaged with delta_location keys.
+- **Backdrop:** the portrait camera sees much more dome and floor.
+  - The dome is dimmed and the floor emission is off.
+  - Without this, Seedance turned the red into a wall and a stage edge.
+- **Seedance:** `HERO_MOBILE=1 python3 scripts/seedance_chain.py prep|splice N`. Finals are in `docs/hero/seedance/mobile/`.
+  - Seedance draws characters larger than their blocks. The mobile prompts pin head height ("below the middle of the frame").
+  - Patapim uses a padded reference (`docs/hero/refs/crop-pata-small.jpg`). The close-up crop made him a giant every time.
+  - P7 would not scatter the team rows in three takes. The final uses the second half of take 3, where the cast stays in the rows, spliced on P6's last frame.
+  - Spend was about $83 (19 edits), including retakes of P1 (3), P2 (4), P4 (1) and P7 (2).
+- **Web:** `python3 -I scripts/encode_hero.py --mobile` writes `public/hero/m/` and `src/hero/manifest-mobile.json`.
+  - `HeroStage` picks this set on screens narrower than 2:3, chosen once on load.
+  - Tablets and landscape keep the 16:9 set with the crop focus.
+  - Copy for the portrait set is laid out under `.stage-portrait` in globals.css.
