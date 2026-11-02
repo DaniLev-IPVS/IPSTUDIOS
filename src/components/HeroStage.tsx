@@ -67,6 +67,14 @@ function makeHero(manifest: Manifest, portrait: boolean) {
     portrait,
     /** Finish a move on its own when the visitor stops scrolling mid-way. */
     snap: portrait,
+    /**
+     * Fastest the picture may follow the scroll, in seconds of footage per second: motion
+     * clips at about real time, rest loops a little quicker so leaving a rest is not a wait.
+     * A fast flick then plays through at normal speed instead of racing; slow scrolls are
+     * untouched. Infinity keeps desktop as it was.
+     */
+    maxRate: portrait ? 1.1 : Infinity,
+    maxRestRate: portrait ? 2 : Infinity,
     track,
     motionFirst: (j: number) => frameTime(manifest.motion[j].startFrame),
     motionLast: (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1),
@@ -263,9 +271,9 @@ export default function HeroStage() {
         if (s0?.kind === "motion") {
           const goal = restSeg(dir > 0 ? s0.index : s0.index - 1);
           const to = goal.start + goal.length * REST_POINT;
-          // Play the rest of the move at about 2.5x, never longer than five seconds.
+          // Scroll the rest of the move at the speed the picture is allowed to play it.
           const left = (Math.abs(to - y0) / s0.length) * manifest.motion[s0.index].duration;
-          auto = { from: y0, to, t0: now, dur: Math.min(5000, Math.max(600, (left / 2.5) * 1000)) };
+          auto = { from: y0, to, t0: now, dur: Math.max(600, (left / hero.maxRate) * 1000) };
         }
       }
 
@@ -301,7 +309,9 @@ export default function HeroStage() {
             pending = { kind: "motion", index: j };
           } else if (!r.seeking) {
             // Time-based so slow devices catch up as fast as quick ones.
-            const step = Math.sign(diff) * Math.min(Math.abs(diff), Math.max(dt * 6, Math.abs(diff) * (1 - Math.exp(-dt * 14))));
+            const step =
+              Math.sign(diff) *
+              Math.min(Math.abs(diff), dt * hero.maxRestRate, Math.max(dt * 6, Math.abs(diff) * (1 - Math.exp(-dt * 14))));
             r.currentTime = r.currentTime + step;
           }
         }
@@ -321,7 +331,8 @@ export default function HeroStage() {
           target = motionFirst(j);
           arrive = j - 1;
         }
-        current += (target - current) * (1 - Math.exp(-dt * 12));
+        const chase = (target - current) * (1 - Math.exp(-dt * 12));
+        current += Math.sign(chase) * Math.min(Math.abs(chase), dt * hero.maxRate);
         if (Math.abs(target - current) < 0.004) current = target;
         if (!v.seeking && Math.abs(v.currentTime - current) > 0.01) v.currentTime = current;
         if (arrive !== null && current === target && !v.seeking) {
