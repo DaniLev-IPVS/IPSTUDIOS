@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
-import manifest from "@/hero/manifest.json";
+import desktopManifest from "@/hero/manifest.json";
+import mobileManifest from "@/hero/manifest-mobile.json";
 import { brand, contactEmail, sections, teamCircles, viralStats } from "@/content";
 
 /*
@@ -16,15 +17,19 @@ import { brand, contactEmail, sections, teamCircles, viralStats } from "@/conten
  * All motion clips live in one file (motion.mp4) back to back; manifest.json holds
  * each clip's offset in frames. The Seedance pairs are chained: the first frame of every
  * pair is the exact last frame of the pair before, so the scene never jumps.
+ *
+ * Phones get their own 9:16 set (public/hero/m, manifest-mobile.json), filmed with a
+ * portrait camera so the copy sits above the characters instead of beside them.
  */
 
 type Seg = { kind: "rest" | "motion"; index: number; start: number; length: number };
+type Manifest = typeof desktopManifest;
 
 const REST_VH = 120; // scroll length of a rest, in viewport heights
 const VH_PER_SECOND = 13; // scroll length per second of motion
 const LAST_REST_VH = 100;
 
-function buildTrack(): { segs: Seg[]; total: number } {
+function buildTrack(manifest: Manifest): { segs: Seg[]; total: number } {
   const segs: Seg[] = [];
   let y = 0;
   for (let i = 0; i < manifest.rest.length; i++) {
@@ -41,7 +46,6 @@ function buildTrack(): { segs: Seg[]; total: number } {
   return { segs, total: y };
 }
 
-const TRACK = buildTrack();
 const smooth = (t: number) => {
   const c = Math.min(1, Math.max(0, t));
   return c * c * (3 - 2 * c);
@@ -50,18 +54,33 @@ const smooth = (t: number) => {
 const FPS = 24;
 /** Time of the centre of frame `f`, so seeks land on that exact frame. */
 const frameTime = (f: number) => (f + 0.5) / FPS;
-const motionFirst = (j: number) => frameTime(manifest.motion[j].startFrame);
-const motionLast = (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1);
 
-/** Opacity of the copy for rest `i` at scroll position `y` (in vh). */
-function copyOpacity(i: number, y: number) {
-  const rest = TRACK.segs.find((s) => s.kind === "rest" && s.index === i)!;
-  const next = TRACK.segs.find((s) => s.kind === "motion" && s.index === i + 1);
-  if (y < rest.start) return i === 0 ? 1 : 0;
-  const fadeIn = i === 0 ? 1 : smooth((y - rest.start) / (rest.length * 0.14));
-  if (!next || y < next.start) return fadeIn;
-  return 1 - smooth((y - next.start) / (next.length * 0.18));
+/** One video set (desktop 16:9 or mobile 9:16) and the scroll track built from it. */
+function makeHero(manifest: Manifest, portrait: boolean) {
+  const track = buildTrack(manifest);
+  return {
+    manifest,
+    portrait,
+    track,
+    motionFirst: (j: number) => frameTime(manifest.motion[j].startFrame),
+    motionLast: (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1),
+    /** Opacity of the copy for rest `i` at scroll position `y` (in vh). */
+    copyOpacity(i: number, y: number) {
+      const rest = track.segs.find((s) => s.kind === "rest" && s.index === i)!;
+      const next = track.segs.find((s) => s.kind === "motion" && s.index === i + 1);
+      if (y < rest.start) return i === 0 ? 1 : 0;
+      const fadeIn = i === 0 ? 1 : smooth((y - rest.start) / (rest.length * 0.14));
+      if (!next || y < next.start) return fadeIn;
+      return 1 - smooth((y - next.start) / (next.length * 0.18));
+    },
+  };
 }
+type Hero = ReturnType<typeof makeHero>;
+
+const DESKTOP = makeHero(desktopManifest, false);
+const MOBILE = makeHero(mobileManifest as Manifest, true);
+/** Phones in portrait get the 9:16 set; tablets and landscape keep the 16:9 one. */
+const PORTRAIT_SET = "(max-aspect-ratio: 2/3)";
 
 type Phase = "intro" | "live";
 
@@ -73,15 +92,23 @@ export default function HeroStage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [section, setSection] = useState(0);
   const phaseRef = useRef<Phase>("intro");
+  // Chosen once on load, so the videos never reload mid-scroll.
+  const [hero, setHero] = useState<Hero | null>(null);
 
-  // Fit a 16:9 box to the same rectangle the cover-fitted video occupies, so copy
+  useEffect(() => {
+    setHero(window.matchMedia(PORTRAIT_SET).matches ? MOBILE : DESKTOP);
+  }, []);
+
+  // Fit a box to the same rectangle the cover-fitted video occupies, so copy
   // positioned in frame percentages lines up with the characters.
   useEffect(() => {
+    if (!hero) return;
+    const ar = hero.portrait ? 9 / 16 : 16 / 9;
     const fit = () => {
       const el = stageRef.current;
       if (!el) return;
-      const w = Math.max(window.innerWidth, (window.innerHeight * 16) / 9);
-      const h = (w * 9) / 16;
+      const w = Math.max(window.innerWidth, window.innerHeight * ar);
+      const h = w / ar;
       el.style.setProperty("--sw", `${w}px`);
       el.style.setProperty("--sh", `${h}px`);
       el.style.setProperty("--sx", `${(window.innerWidth - w) / 2}px`);
@@ -90,12 +117,13 @@ export default function HeroStage() {
     fit();
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
-  }, []);
+  }, [hero]);
 
   // Intro: play M1 once with scrolling locked, then hand over to the R1 loop.
   useEffect(() => {
     const v = motionRef.current;
-    if (!v) return;
+    if (!v || !hero) return;
+    const { manifest, motionLast } = hero;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const end = motionLast(0);
     const finish = () => {
@@ -134,7 +162,7 @@ export default function HeroStage() {
       window.clearTimeout(guard);
       document.documentElement.style.overflow = "";
     };
-  }, []);
+  }, [hero]);
 
   // Scroll loop. Two layers show the scene: the motion clip (scrubbed by scroll) and the
   // rest loop of the current section. They only ever swap on a frame both show
@@ -145,7 +173,8 @@ export default function HeroStage() {
   //                          the first frame of motion k+1
   //   rest k  -> motion k    rest scrubs back to frame 0, next to motion k's last frame
   useEffect(() => {
-    if (phase !== "live") return;
+    if (phase !== "live" || !hero) return;
+    const { manifest, track: TRACK, motionFirst, motionLast, copyOpacity } = hero;
     const v = motionRef.current!;
     const rests = restRefs.current;
     let raf = 0;
@@ -270,11 +299,12 @@ export default function HeroStage() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase]);
+  }, [phase, hero]);
 
-  // On portrait screens the 16:9 frame is cropped to its centre, so pan the crop
-  // toward where the action is in each section.
+  // On portrait screens that still get the 16:9 set (tablets), the frame is cropped to
+  // its centre, so pan the crop toward where the action is in each section.
   useEffect(() => {
+    if (!hero || hero.portrait) return;
     const mq = window.matchMedia("(max-aspect-ratio: 4/3), (max-width: 820px)");
     const apply = () => {
       const pos = mq.matches ? `${PORTRAIT_FOCUS[section] ?? 50}% 50%` : "";
@@ -286,10 +316,11 @@ export default function HeroStage() {
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, [section]);
+  }, [section, hero]);
 
   const goTo = (i: number) => {
-    const rest = TRACK.segs.find((s) => s.kind === "rest" && s.index === i)!;
+    if (!hero) return;
+    const rest = hero.track.segs.find((s) => s.kind === "rest" && s.index === i)!;
     const vh = window.innerHeight / 100;
     window.scrollTo({ top: (rest.start + rest.length * 0.3) * vh, behavior: "smooth" });
   };
@@ -299,20 +330,22 @@ export default function HeroStage() {
   return (
     <>
       {/* Scroll track */}
-      <div aria-hidden style={{ height: `${TRACK.total + 100}vh` }} />
+      <div aria-hidden style={{ height: `${(hero ?? DESKTOP).track.total + 100}vh` }} />
 
-      <div ref={stageRef} className="stage fixed inset-0 overflow-hidden bg-ink">
+      <div ref={stageRef} className={`stage fixed inset-0 overflow-hidden bg-ink ${hero?.portrait ? "stage-portrait" : ""}`}>
+        {hero && (
+          <>
         <video
           ref={motionRef}
           className="stage-video"
-          src={manifest.motionSrc}
-          poster={manifest.poster}
+          src={hero.manifest.motionSrc}
+          poster={hero.manifest.poster}
           muted
           playsInline
           preload="auto"
           style={{ opacity: 1 }}
         />
-        {manifest.rest.map((r, i) => (
+        {hero.manifest.rest.map((r, i) => (
           <video
             key={r.src}
             ref={(el) => {
@@ -327,6 +360,8 @@ export default function HeroStage() {
             style={{ opacity: 0 }}
           />
         ))}
+          </>
+        )}
         <div className="stage-vignette" />
 
         {/* Copy layer. Positions are percentages of the video frame. */}
@@ -381,7 +416,7 @@ export default function HeroStage() {
             ref={(el) => {
               copyRefs.current[2] = el;
             }}
-            className="copy copy-right"
+            className="copy copy-right copy-proof"
             style={{ left: "58%", top: "14%", width: "36%" }}
           >
             <p className="eyebrow">{sections.proof.eyebrow}</p>
@@ -405,7 +440,7 @@ export default function HeroStage() {
             ref={(el) => {
               copyRefs.current[3] = el;
             }}
-            className="copy copy-left"
+            className="copy copy-left copy-problem"
             style={{ left: "5%", top: "8%", width: "36%" }}
           >
             <p className="eyebrow">{sections.problem.eyebrow}</p>
@@ -499,7 +534,7 @@ export default function HeroStage() {
             ref={(el) => {
               copyRefs.current[6] = el;
             }}
-            className="copy copy-center"
+            className="copy copy-center copy-contact"
             style={{ left: "50%", top: "11%", width: "48%" }}
             id="contact"
           >

@@ -2,17 +2,20 @@
 
   prep N          build v2/src/PN.mp4 = last 2 s of the previous final + blocking pair; print prompt
   splice N FILE   align the Seedance output to the previous final's last frame and write the final
+
+Set HERO_MOBILE=1 for the 9:16 set: blocking from clips/mobile, finals in seedance/mobile.
 """
 import json, subprocess, sys, os
 import numpy as np
 
-REPO = "/Users/daniellipkovich/My Projects/IP VENTURES CODE/IP Studios"
+REPO = os.environ.get("HERO_REPO", "/Users/daniellipkovich/My Projects/IP VENTURES CODE/IP Studios")
+MOBILE = os.environ.get("HERO_MOBILE") == "1"
 W = os.environ.get("CHAIN_WORKDIR", "/tmp/seedance-chain")  # sources and downloads
-PAIRS = f"{REPO}/docs/hero/blocking/clips/pairs"
+PAIRS = f"{REPO}/docs/hero/blocking/clips/" + ("mobile" if MOBILE else "pairs")
 FINAL = f"{REPO}/docs/hero/seedance"
 NAMES = ["P1-cover", "P2-world", "P3-proof", "P4-problem", "P5-vision", "P6-team", "P7-contact"]
 PRE = 2.0   # seconds of the previous final prepended to each source
-FW, FH = 1280, 720
+FW, FH = (720, 1280) if MOBILE else (1280, 720)
 
 LOOK = ("Use Image 1 only for what each character looks like; do not copy Image 1's composition, framing or character size. "
         "Labels: TUNG TUNG TUNG SAHUR is the tall wooden log with big round eyes, thin wooden arms and legs and a wooden baseball bat; "
@@ -39,12 +42,16 @@ CASTD = {
  "gor": "BANANA GORILLA is the green chimp in a peeled banana",
  "zeb": "WATERMELON ZEBRA is the zebra with a watermelon body",
 }
-WHO = {2: ["tung", "capp", "trala", "pata"], 3: ["tung", "capp", "trala", "pata", "cheese", "ninja"], 4: ["tung"],
+WHO = {1: ["tung"], 2: ["tung", "capp", "trala", "pata"], 3: ["tung", "capp", "trala", "pata", "cheese", "ninja"], 4: ["tung"],
        5: list(CASTD), 6: list(CASTD), 7: list(CASTD)}
 B = "https://6hggvldisl97ymdx.public.blob.vercel-storage.com/projects/cmvvp4osz0001k1079l7ijaw4/external-inputs/"
 REF = {"tung": B + "1793568839195-crop-tung.jpg", "capp": B + "1793568839729-crop-capp.jpg", "trala": B + "1793568840217-crop-trala.jpg",
        "pata": B + "1793568841828-crop-pata.jpg", "cheese": B + "1793568842421-crop-cheese.jpg", "ninja": B + "1793568843453-crop-ninja.jpg",
        "gor": B + "1793568844394-crop-gor.jpg", "zeb": B + "1793568845890-crop-zeb.jpg"}
+if MOBILE:
+    # The close-up crop makes Seedance draw Patapim as a giant; padded so he is small in the picture.
+    REF["pata"] = B + "1793598170152-pata-small.jpg"
+    CASTD["pata"] = "BRR BRR PATAPIM is the moss-and-root creature with a long nose, small in the picture"
 def refs(n): return [REF[c] for c in WHO[n]]
 def labels(n):
     out = []
@@ -86,6 +93,48 @@ BEATS = {
      "floor in the front left. The centre of the frame and the entire upper half stay empty.", ""),
 }
 
+# Mobile restages World, Team and Contact (see scripts/build_mobile_blend.py).
+MOBILE_BEATS = {
+ 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina pirouettes in from the left, Brr Brr Patapim lumbers in from the right and "
+     "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand at two depths in the "
+     "lower half of the frame, idling: Tung and Brr Brr Patapim further back, Ballerina Cappuccina at the front left and Tralalero Tralala at the front "
+     "right; the upper half of the frame empty. Brr Brr Patapim is not a giant: he is only a little taller than Tung, stands beside him at the same "
+     "distance from the camera, and the top of his head stays level with Tung's head, below the middle of the frame.", ""),
+ 6: ("From 0:02 to 0:04 they ride the round pink stage down to the floor, then step off and walk into two staggered rows of four, and the stage sinks "
+     "away into the floor. From 0:08.3 to the end they stand in those rows, idling. Back row, left to right: watermelon zebra, Brr Brr Patapim, banana "
+     "gorilla, coffee-cup ninja. Front row, left to right: Tralalero Tralala, Ballerina Cappuccina, Tung Tung Tung Sahur, Tim Cheese. All of them in the "
+     "lower half of the frame, the entire upper half empty.", ""),
+ 7: ("From 0:02 every figure is already its finished character; no grey block, statue or unfinished figure is ever visible. "
+     "From 0:02 to 0:07.4 they clearly break the two rows: each one turns and walks to a new spot, following its block figure's path, and they "
+     "never stand in rows again; nobody leaves the frame. From 0:07.4 to the end they are spread out "
+     "and relaxed: Tung Tung Tung Sahur stands closest to the camera, just right of centre at the bottom of the frame; the watermelon zebra, banana gorilla, "
+     "Tralalero Tralala and Tim Cheese idle further back along the left edge (Tim Cheese sits on the floor, Tralalero bounces on the spot); Brr Brr Patapim, "
+     "Ballerina Cappuccina and the coffee-cup ninja idle further back along the right edge (the ninja sits on the floor). The entire upper half stays empty.", ""),
+}
+if MOBILE:
+    BEATS.update(MOBILE_BEATS)
+    BEATS[3] = (BEATS[3][0], BEATS[3][1][:-1] + "; they stay low and far away, their tops below the middle of the frame.")
+    BEATS[4] = (BEATS[4][0] + " Tung stays small and far from the camera, exactly the size of the block figure: the top of his head is just below "
+                "the middle of the frame, never higher, and everything above the middle of the frame is empty dark space.", BEATS[4][1])
+    BEATS[5] = (BEATS[5][0] + " Everyone stays as small as their block figures: the whole group and the stage stay inside the middle band of the frame, "
+                "from about a third of the way down to about four fifths of the way down; the top third of the frame is empty dark space.", BEATS[5][1])
+    # The portrait blocking shows a lot of dark-red backdrop; without this Seedance turns it into a flat red wall.
+    VOID += (". The space behind the characters stays as dark as in the first two seconds, mostly black with only a faint low red glow; "
+             "it never becomes a red wall, curtain or backdrop")
+
+
+def prompt1():
+    return ("Edit Video 1 in three ways. First, erase the floating white words (the character name label) and replace them with empty background, so the "
+            "result contains no words or letters at all. Second, replace the grey block figure with TUNG TUNG TUNG SAHUR from Image 1 (the tall wooden log "
+            "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
+            "only for what he looks like; do not copy its framing or size. He walks in from far back on the right, crosses toward the centre and walks "
+            "forward, then settles just right of centre with his feet near the bottom of the frame and idles to the end: breathing, shifting his weight, "
+            "glancing around, tapping the bat. He keeps the exact size, screen position and path of the block figure at every moment: he stays small, "
+            "and even when he is closest to the camera the top of his head is just below the middle of the frame, never higher. Third, restyle the "
+            "background: " + VOID + ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. "
+            "Cinematic 3D animated film look.")
+
+
 def prompt(n):
     beat, extra = BEATS[n]
     return ("Edit Video 1 in four ways. First, Video 1 from 0:00 to 0:02 is already finished footage: keep those two seconds exactly unchanged. "
@@ -95,7 +144,8 @@ def prompt(n):
             "0:02 keeps looking exactly as it does there. Labels: " + labels(n) + ". " +
             (f"Exactly {WORDS[len(WHO[n])]} characters appear in this shot, one per block figure; " if len(WHO[n]) > 1 else "Only this one character appears; ") + "never add any other character. Use the images only for what each character looks like; do not copy their "
             "framing or size. " + beat + " Every character keeps the exact size, screen position and path of its block figure at "
-            "every moment, with lively, characterful animation; when standing they breathe, shift weight, glance around and fidget. "
+            "every moment" + (" (do not enlarge anyone: in this tall frame every head stays in the lower half of the frame, the upper half is "
+            "left empty for text)" if MOBILE and n != 7 else "") + ", with lively, characterful animation; when standing they breathe, shift weight, glance around and fidget. "
             "Fourth, from 0:02 onward the background stays exactly as it is from 0:00 to 0:02: " + VOID + "." + extra +
             " Keep the camera motion and the timing exactly as in Video 1. Cinematic 3D animated film look.")
 
@@ -113,7 +163,7 @@ def read_frames(f, start=0, count=None):
     a = np.frombuffer(raw, np.uint8).reshape(-1, FH, FW, 3)
     return a[start:start + count] if count else a[start:]
 
-def final_path(n): return f"{FINAL}/v2/{NAMES[n-1]}.mp4"
+def final_path(n): return f"{FINAL}/{'mobile' if MOBILE else 'v2'}/{NAMES[n-1]}.mp4"
 
 def prep(n):
     os.makedirs(f"{W}/src", exist_ok=True)
@@ -129,9 +179,10 @@ def prep(n):
            f"[0:v]scale={FW}:{FH},fps=24,trim=start_frame={nf-int(PRE*24)},setpts=PTS-STARTPTS[a];"
            f"[1:v]scale={FW}:{FH},fps=24,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1[v]", "-map", "[v]", *enc, out)
     print(out, os.path.getsize(out) / 1e6, "MB", probe_frames(out) / 24, "s")
-    if n > 1:
-        open(f"{W}/src/{NAMES[n-1]}.txt", "w").write(prompt(n))
-        print(prompt(n)); print(json.dumps(refs(n)))
+    if n > 1 or MOBILE:
+        text = prompt(n) if n > 1 else prompt1()
+        open(f"{W}/src/{NAMES[n-1]}.txt", "w").write(text)
+        print(text); print(json.dumps(refs(n)))
 
 def write_video(frames, out):
     os.makedirs(os.path.dirname(out), exist_ok=True)
