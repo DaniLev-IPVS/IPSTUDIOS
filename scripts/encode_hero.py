@@ -3,9 +3,9 @@
 
 Each pair is one motion clip followed by its rest clip (M_i + R_i), rendered and
 edited as a single source so the hand-off inside a section is continuous.
-Source per pair: docs/hero/seedance/v2/P<i>-*.mp4 (the chained Seedance 2.5 edits, where
-the first frame of every pair is the exact last frame of the pair before) if present,
-else docs/hero/seedance/P<i>-*.mp4, else the Blender playblast.
+Source per pair: docs/hero/seedance/v3/P<i>-*.mp4 (the chained Seedance 2.5 edits with real
+walking and Tung's bat in hand, where the first frame of every pair is the exact last frame of
+the pair before) if present, else v2, else docs/hero/seedance/P<i>-*.mp4, else the Blender playblast.
 
 Outputs:
   public/hero/motion.mp4   M1..M7 back to back, short GOP so scroll scrubbing seeks fast
@@ -21,11 +21,12 @@ import json, pathlib, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEED = ROOT / "docs/hero/seedance"
 SEED2 = SEED / "v2"
+SEED3 = SEED / "v3"
 BLOCK = ROOT / "docs/hero/blocking/clips/pairs"
 OUT = ROOT / "public/hero"
 MANIFEST = ROOT / "src/hero/manifest.json"
 URL = "/hero"
-SOURCES = ((SEED2, "seedance-v2"), (SEED, "seedance"), (BLOCK, "blocking"))
+SOURCES = ((SEED3, "seedance-v3"), (SEED2, "seedance-v2"), (SEED, "seedance"), (BLOCK, "blocking"))
 if "--mobile" in sys.argv:
     OUT, MANIFEST, URL = OUT / "m", ROOT / "src/hero/manifest-mobile.json", "/hero/m"
     SOURCES = ((SEED / "mobile", "seedance-mobile"), (ROOT / "docs/hero/blocking/clips/mobile", "blocking-mobile"))
