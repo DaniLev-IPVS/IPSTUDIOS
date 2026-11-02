@@ -28,8 +28,8 @@ type Manifest = typeof desktopManifest;
 /** Scroll lengths in viewport heights: per rest, per second of motion, minimum per motion. */
 type Pace = { rest: number; lastRest: number; perSecond: number; minMotion: number };
 const DESKTOP_PACE: Pace = { rest: 120, lastRest: 100, perSecond: 13, minMotion: 90 };
-// Phones scroll a much shorter track and snap to the rests (see the scroll loop).
-const MOBILE_PACE: Pace = { rest: 50, lastRest: 60, perSecond: 5, minMotion: 45 };
+// Phones: the scroll is held back to the picture and snaps to the rests (see the scroll loop).
+const MOBILE_PACE: Pace = { rest: 60, lastRest: 70, perSecond: 10, minMotion: 60 };
 /** Where a rest is parked: this fraction of the way into its scroll segment. */
 const REST_POINT = 0.3;
 
@@ -67,6 +67,8 @@ function makeHero(manifest: Manifest, portrait: boolean) {
     portrait,
     /** Finish a move on its own when the visitor stops scrolling mid-way. */
     snap: portrait,
+    /** Hold the scroll between the rests either side of the picture, so it can't run ahead. */
+    gate: portrait,
     /**
      * Fastest the picture may follow the scroll, in seconds of footage per second: motion
      * clips at about real time, rest loops a little quicker so leaving a rest is not a wait.
@@ -74,7 +76,7 @@ function makeHero(manifest: Manifest, portrait: boolean) {
      * untouched. Infinity keeps desktop as it was.
      */
     maxRate: portrait ? 1.1 : Infinity,
-    maxRestRate: portrait ? 2 : Infinity,
+    maxRestRate: portrait ? 3 : Infinity,
     track,
     motionFirst: (j: number) => frameTime(manifest.motion[j].startFrame),
     motionLast: (j: number) => frameTime(manifest.motion[j].startFrame + manifest.motion[j].frames - 1),
@@ -106,6 +108,8 @@ export default function HeroStage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [section, setSection] = useState(0);
   const phaseRef = useRef<Phase>("intro");
+  // Rest a nav button is jumping to: the gate and the speed caps stand aside until it lands.
+  const jumpRef = useRef<number | null>(null);
   // Chosen once on load, so the videos never reload mid-scroll.
   const [hero, setHero] = useState<Hero | null>(null);
 
@@ -236,6 +240,7 @@ export default function HeroStage() {
     };
     const takeOver = () => {
       auto = null;
+      jumpRef.current = null;
       idleSince = performance.now();
     };
     const onTouchStart = () => {
@@ -277,6 +282,28 @@ export default function HeroStage() {
         }
       }
 
+      const jumping = jumpRef.current !== null;
+      if (jumping && !pending && shown.kind === "rest" && shown.index === jumpRef.current) jumpRef.current = null;
+      if (hero.gate && !jumping) {
+        // The visitor may scroll anywhere between the rests either side of the picture, never
+        // beyond: past that the page waits for the move to play out, then lets them carry on.
+        const park = (k: number) => restSeg(k).start + restSeg(k).length * REST_POINT;
+        const lastRest = manifest.rest.length - 1;
+        const k = shown.index;
+        const [lo, hi] =
+          shown.kind === "rest"
+            ? [k > 0 ? park(k - 1) : 0, k < lastRest ? park(k + 1) : TRACK.total + 100]
+            : [k > 0 ? park(k - 1) : 0, park(k)];
+        const y0 = window.scrollY / vh;
+        const held = Math.min(hi, Math.max(lo, y0));
+        if (Math.abs(held - y0) > 0.2) {
+          window.scrollTo({ top: held * vh, behavior: "instant" });
+          lastY = window.scrollY;
+        }
+      }
+      const maxRate = jumping ? Infinity : hero.maxRate;
+      const maxRestRate = jumping ? Infinity : hero.maxRestRate;
+
       const y = window.scrollY / vh;
       const seg = TRACK.segs.find((s) => y >= s.start && y < s.start + s.length) ?? TRACK.segs[TRACK.segs.length - 1];
 
@@ -311,7 +338,7 @@ export default function HeroStage() {
             // Time-based so slow devices catch up as fast as quick ones.
             const step =
               Math.sign(diff) *
-              Math.min(Math.abs(diff), dt * hero.maxRestRate, Math.max(dt * 6, Math.abs(diff) * (1 - Math.exp(-dt * 14))));
+              Math.min(Math.abs(diff), dt * maxRestRate, Math.max(dt * 6, Math.abs(diff) * (1 - Math.exp(-dt * 14))));
             r.currentTime = r.currentTime + step;
           }
         }
@@ -332,7 +359,7 @@ export default function HeroStage() {
           arrive = j - 1;
         }
         const chase = (target - current) * (1 - Math.exp(-dt * 12));
-        current += Math.sign(chase) * Math.min(Math.abs(chase), dt * hero.maxRate);
+        current += Math.sign(chase) * Math.min(Math.abs(chase), dt * maxRate);
         if (Math.abs(target - current) < 0.004) current = target;
         if (!v.seeking && Math.abs(v.currentTime - current) > 0.01) v.currentTime = current;
         if (arrive !== null && current === target && !v.seeking) {
@@ -357,7 +384,7 @@ export default function HeroStage() {
         if (!el) return;
         const want = onScreen(i) ? copyOpacity(i, y) : 0;
         const prev = copyShown[i] ?? want;
-        const o = prev + (want - prev) * (1 - Math.exp(-dt * 10));
+        const o = prev + (want - prev) * (1 - Math.exp(-dt * (hero.gate ? 16 : 10)));
         copyShown[i] = Math.abs(o - want) < 0.005 ? want : o;
         el.style.opacity = String(o);
         el.style.visibility = o < 0.01 ? "hidden" : "visible";
@@ -399,6 +426,7 @@ export default function HeroStage() {
     if (!hero) return;
     const rest = hero.track.segs.find((s) => s.kind === "rest" && s.index === i)!;
     const vh = window.innerHeight / 100;
+    jumpRef.current = i;
     window.scrollTo({ top: (rest.start + rest.length * REST_POINT) * vh, behavior: "smooth" });
   };
 
