@@ -742,7 +742,7 @@ html {
 }
 .stage-portrait .copy-vision,
 .stage-portrait .copy-team {
-  top: 8.5svh !important;
+  top: 7svh !important;
 }
 
 /* Vision: what goes in above the rising stage, what comes out below it. */
@@ -773,7 +773,7 @@ html {
   left: 0;
   right: 0;
   top: auto;
-  bottom: 0;
+  bottom: 7svh;
   margin: 0;
 }
 .stage-portrait .vision-outputs {
@@ -782,18 +782,18 @@ html {
   margin-top: 1svh;
 }
 .stage-portrait .vision-outputs .display {
-  font-size: 4.2vw;
+  font-size: 4.6vw;
 }
 
-/* Team: eight circles in a 4 x 2 grid over the two rows of characters. */
+/* Team: eight circles in a 4 x 2 grid, kept compact so it ends above the group's heads. */
 .stage-portrait .team-row {
   grid-template-columns: repeat(4, 1fr);
-  gap: 2.4svh 2vw;
-  margin-top: 2.4svh;
+  gap: 1.2svh 2vw;
+  margin-top: 1.2svh;
 }
 .stage-portrait .team-photo {
-  width: 14vw;
-  height: 14vw;
+  width: 11vw;
+  height: 11vw;
 }
 .stage-portrait .team-name {
   font-size: 3vw;
