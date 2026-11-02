@@ -178,3 +178,11 @@ Seedance plan: each M clip is one EDIT task (all between 4 and 20 s). Each R cli
   - `HeroStage` picks this set on screens narrower than 2:3, chosen once on load.
   - Tablets and landscape keep the 16:9 set with the crop focus.
   - Copy for the portrait set is laid out under `.stage-portrait` in globals.css.
+
+### 9.1 Mobile fixes (2 Nov 2026, Daniel's review)
+
+- **Scroll:** phones scroll a much shorter track (50 vh per rest, 5 vh per second of motion). If the visitor stops inside a move, the page keeps scrolling for them to the rest they were heading for, so the move plays through (about 2.5x, at most 5 s) and parks. Any touch, wheel or key hands control back. Desktop pacing is unchanged.
+- **Walking and waiting:** the mobile prompts ask for real steps (no gliding) and give each character one calm waiting action for the rest loops: Tung twiddles his thumbs, Tralalero kicks at the floor, Patapim whistles, Cappuccina rocks on her toes, Tim Cheese checks his watch, the ninja yawns, the gorilla scratches his head, the zebra paws the floor.
+- **Framing:** the cover camera starts further back so Tung is about a third of the frame (Seedance draws him about 2x his block). The Vision camera is tilted down so the stage sits in the middle band, leaving room for the outputs. The Team camera is higher and further back, since Vision now ends with the cast larger.
+- **Gaze:** at rest the cast faces the camera; on the Vision stage they face left as it turns and come round to the camera.
+- **Seedance:** all seven sections re-chained, about $70 (13 edits). Retakes: P1 (size), P2 (Patapim a giant), P3 x3 (a hard cut at 0:02, then Tim Cheese popping in; the final fades him in by splicing after the pop with `SPLICE_AT=48`), P6 x2 (the group stays clustered in the centre; the Team circles were made more compact instead).

@@ -2,6 +2,7 @@
 
   prep N          build v2/src/PN.mp4 = last 2 s of the previous final + blocking pair; print prompt
   splice N FILE   align the Seedance output to the previous final's last frame and write the final
+                  (SPLICE_AT=frame overrides the matched frame)
 
 Set HERO_MOBILE=1 for the 9:16 set: blocking from clips/mobile, finals in seedance/mobile.
 """
@@ -97,7 +98,7 @@ if not MOBILE:
     VOID += ". The floor is evenly dark: no pink or red pool of light, no glowing ellipse or spotlight patch on the floor"
 
 # v3 (desktop): real walking, Tung's bat always in hand, and each character passes the time its own way while waiting.
-WALK = ("Whenever anyone moves across the floor they really walk, step by step, matching the stepping legs of their block figure: feet lift and plant "
+WALK_V3 = ("Whenever anyone moves across the floor they really walk, step by step, matching the stepping legs of their block figure: feet lift and plant "
         "firmly on the floor, no sliding, gliding, floating, hopping or bouncing. Tung Tung Tung Sahur holds his wooden baseball bat in his right hand "
         "at every moment, gripping the handle and resting it on his right shoulder, exactly where the light-wood stick is on his block figure, one natural wooden bat; the bat is visible "
         "in every single frame, while he walks and while he stands, and he never puts it down, never lets go of it, never leans it beside him and it never floats. ")
@@ -120,7 +121,7 @@ def prompt1_desktop():
             "result contains no words or letters at all. Second, replace the grey block figure with TUNG TUNG TUNG SAHUR from Image 1 (the tall wooden log "
             "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
             "only for what he looks like; do not copy its framing or size. He walks the whole way, step by step, never hopping: in from far back on the right, "
-            "toward the centre and forward, then he stops just right of centre and waits to the end. " + WALK + waits(1) +
+            "toward the centre and forward, then he stops just right of centre and waits to the end. " + WALK_V3 + waits(1) +
             "He keeps the exact size, screen position and path of the block figure at every moment. Third, restyle the background: " + VOID +
             ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. Cinematic 3D animated film look.")
 
@@ -129,14 +130,15 @@ MOBILE_BEATS = {
  2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina walks in from the left on light dancer steps, Brr Brr Patapim walks in from the right with heavy steps and "
      "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand at two depths in the "
      "lower half of the frame, idling: Tung and Brr Brr Patapim further back, Ballerina Cappuccina at the front left and Tralalero Tralala at the front "
-     "right; the upper half of the frame empty. Brr Brr Patapim is not a giant: he is only a little taller than Tung, stands beside him at the same "
-     "distance from the camera, and the top of his head stays level with Tung's head, below the middle of the frame.", ""),
+     "right; the upper half of the frame empty. Brr Brr Patapim is small, no taller than Tung: he stands beside Tung at the same distance from "
+     "the camera, his feet level with Tung's feet and the top of his head level with Tung's head, below the middle of the frame, from the moment "
+     "he walks in to the end.", ""),
  6: ("From 0:02 to 0:04 they ride the round pink stage down to the floor, then step off and walk into two staggered rows of four, and the stage sinks "
      "away into the floor. From 0:08.3 to the end they stand in those rows, idling. Back row, left to right: watermelon zebra, Brr Brr Patapim, banana "
      "gorilla, coffee-cup ninja. Front row, left to right: Tralalero Tralala, Ballerina Cappuccina, Tung Tung Tung Sahur, Tim Cheese. All of them in the "
      "lower half of the frame, the entire upper half empty.", ""),
  7: ("From 0:02 every figure is already its finished character; no grey block, statue or unfinished figure is ever visible. "
-     "From 0:02 to 0:07.4 they clearly break the two rows: each one turns and walks to a new spot, following its block figure's path, and they "
+     "From 0:02 to 0:07.4 they clearly break up the group: each one turns and walks to a new spot, following its block figure's path, and they "
      "never stand in rows again; nobody leaves the frame. From 0:07.4 to the end they are spread out "
      "and relaxed: Tung Tung Tung Sahur stands closest to the camera, just right of centre at the bottom of the frame; the watermelon zebra, banana gorilla, "
      "Tralalero Tralala and Tim Cheese idle further back along the left edge (Tim Cheese sits on the floor, Tralalero bounces on the spot); Brr Brr Patapim, "
@@ -144,14 +146,46 @@ MOBILE_BEATS = {
 }
 if MOBILE:
     BEATS.update(MOBILE_BEATS)
-    BEATS[3] = (BEATS[3][0], BEATS[3][1][:-1] + "; they stay low and far away, their tops below the middle of the frame.")
-    BEATS[4] = (BEATS[4][0] + " Tung stays small and far from the camera, exactly the size of the block figure: the top of his head is just below "
+    BEATS[3] = ("This is one continuous shot with no cut: at 0:02 Ballerina Cappuccina, Tung, Brr Brr Patapim and Tralalero Tralala are exactly "
+                "where they are at the end of the finished footage and carry on from there; they stay in the shot until they walk off with the group. Nobody new is on screen at 0:02 and nobody "
+                "appears out of nowhere: Tim Cheese first appears at the left edge of the frame and walks in, and Ballerina Cappuccina stays herself. "
+                + BEATS[3][0], BEATS[3][1][:-1] + "; they stay low and far away, their tops below the middle of the frame.")
+    BEATS[4] = (BEATS[4][0].replace("breathing, shifting his weight and tapping the bat", "facing the camera") + " Tung stays small and far from the camera, exactly the size of the block figure: the top of his head is just below "
                 "the middle of the frame, never higher, and everything above the middle of the frame is empty dark space.", BEATS[4][1])
     BEATS[5] = (BEATS[5][0] + " Everyone stays as small as their block figures: the whole group and the stage stay inside the middle band of the frame, "
                 "from about a third of the way down to about four fifths of the way down; the top third of the frame is empty dark space.", BEATS[5][1])
+    BEATS[2] = (BEATS[2][0] + " When they stand still all four face the camera; Tung looks straight into the lens, not to the side.", BEATS[2][1])
+    BEATS[5] = (BEATS[5][0].replace("about a third of the way down to about four fifths of the way down; the top third of the frame is empty dark space.",
+                "about a quarter of the way down to about seven tenths of the way down; the top quarter and the bottom quarter of the frame stay empty.")
+                + " While the stage rotates everyone on it first faces toward the left side of the frame; as the stage turns they turn with it, and by "
+                "0:19.5 every character faces the camera and looks into the lens, to the end.", BEATS[5][1])
+    BEATS[6] = (BEATS[6][0] + " The rows stretch across the full width of the frame, from near the left edge to near the right edge, with clear "
+                "gaps between the characters; the back row's feet are about four fifths of the way down the frame and the front row's feet are near "
+                "the bottom edge. They stay small, as small as their block figures, every head below the middle of the frame: the camera pulls back "
+                "and rises exactly as in Video 1, so by 0:08 the whole group is small in the bottom third of the frame, and it never moves in again. In the rows everyone faces the camera.", BEATS[6][1])
     # The portrait blocking shows a lot of dark-red backdrop; without this Seedance turns it into a flat red wall.
     VOID += (". The space behind the characters stays as dark as in the first two seconds, mostly black with only a faint low red glow; "
              "it never becomes a red wall, curtain or backdrop")
+
+
+# Mobile: the block figures glide, and Seedance copied that as floating. Ask for real steps,
+# and give each character one calm waiting action so the ping-pong rest loops read as waiting.
+WALK = ("Whenever a character moves to a new spot it really walks: legs swing, knees bend, each foot lifts and plants on the glossy floor with "
+        "its reflection, the body bobs with every step. Nobody glides, slides, floats or hovers; feet stay on the floor. ")
+WAIT = {
+ "tung": "Tung Tung Tung Sahur leans his bat against his leg and twiddles his thumbs",
+ "capp": "Ballerina Cappuccina hums with her hands clasped behind her, rocking up onto her toes and back",
+ "trala": "Tralalero Tralala scuffs and kicks at the floor with one sneaker",
+ "pata": "Brr Brr Patapim whistles with his hands behind his back, gazing upward",
+ "cheese": "Tim Cheese checks his pocket watch and taps one foot",
+ "ninja": "the coffee-cup ninja leans on one blade and yawns",
+ "gor": "the banana gorilla scratches his head and peeks at the others",
+ "zeb": "the watermelon zebra paws at the floor with one hoof",
+}
+def waiting(n):
+    acts = "; ".join(WAIT[c] for c in WHO[n])
+    return ("Whenever they stand still they wait like real characters, each with one small, calm, in-place action: " + acts +
+            ". They stay on their spot while they wait, with no sudden jerks.")
 
 
 def prompt1():
@@ -159,9 +193,10 @@ def prompt1():
             "result contains no words or letters at all. Second, replace the grey block figure with TUNG TUNG TUNG SAHUR from Image 1 (the tall wooden log "
             "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
             "only for what he looks like; do not copy its framing or size. He walks in from far back on the right, crosses toward the centre and walks "
-            "forward, then settles just right of centre with his feet near the bottom of the frame and idles to the end: breathing, shifting his weight, "
-            "glancing around, tapping the bat. He keeps the exact size, screen position and path of the block figure at every moment: he stays small, "
-            "and even when he is closest to the camera the top of his head is just below the middle of the frame, never higher. Third, restyle the "
+            "forward, then settles just right of centre with his feet near the bottom of the frame, turns to face the camera and waits to the end. " +
+            WALK + waiting(1) + " He keeps the exact size, screen position and path of the block figure at every moment. He is a small figure far from the "
+            "camera: from head to feet he is only about a quarter of the frame height, his feet near the bottom edge, and even when he is closest "
+            "the top of his head stays in the lower half of the frame, well below the middle. The whole upper half of the frame is empty. Third, restyle the "
             "background: " + VOID + ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. "
             "Cinematic 3D animated film look.")
 
@@ -176,7 +211,8 @@ def prompt(n):
             (f"Exactly {WORDS[len(WHO[n])]} characters appear in this shot, one per block figure; " if len(WHO[n]) > 1 else "Only this one character appears; ") + "never add any other character. Use the images only for what each character looks like; do not copy their "
             "framing or size. " + beat + " Every character keeps the exact size, screen position and path of its block figure at "
             "every moment" + (" (do not enlarge anyone: in this tall frame every head stays in the lower half of the frame, the upper half is "
-            "left empty for text)" if MOBILE and n != 7 else "") + ", with lively, characterful animation. " + ("" if MOBILE else WALK + waits(n)) + ("when standing they breathe, shift weight, glance around and fidget. " if MOBILE else "") +
+            "left empty for text)" if MOBILE and n not in (5, 7) else "") + ", with lively, characterful animation" +
+            (". " + WALK + waiting(n) + " " if MOBILE else ". " + WALK_V3 + waits(n)) +
             "Fourth, from 0:02 onward the background stays exactly as it is from 0:00 to 0:02: " + VOID + "." + extra +
             " Keep the camera motion and the timing exactly as in Video 1. Cinematic 3D animated film look.")
 
@@ -231,6 +267,9 @@ def splice(n, f):
     lo, hi = max(0, k - 18), min(len(o), k + 18)
     err = [float(np.mean(np.abs(o[j].astype(np.float32) - last))) for j in range(lo, hi)]
     j = lo + int(np.argmin(err))
+    if os.environ.get("SPLICE_AT"):
+        # Start after a pop in the take instead, so the correction fades it in.
+        j = int(os.environ["SPLICE_AT"])
     print(f"best match frame {j} (expected {k-1}), mean abs err {min(err):.2f}; neighbours", [round(e, 1) for e in err])
     body = o[j:].astype(np.float32)
     d = last - body[0]

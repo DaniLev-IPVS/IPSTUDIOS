@@ -106,11 +106,15 @@ HORIZON = pitch_for_horizon(0.55)
 # ---------------------------------------------------------------- rest cameras
 rests = {}  # rest key frame -> (cam pos, yaw, pitch)
 
-# R1 Cover: Tung centre-right, feet near the bottom, head at the horizon.
+# R1 Cover: Tung centre-right, feet near the bottom. Seedance draws him about 1.6x his
+# block, so the block's head stops well below the horizon to keep him clear of the logo.
 t = at(CH["tung"], 200)
 c1 = solve_cam((2, -11, 2.3), 0.0, HORIZON, [
-    (t, 200, 600), (t + Vector((0, 0, HEIGHT["tung"])), None, 364)])
+    (t, 200, 600), (t + Vector((0, 0, HEIGHT["tung"])), None, 465)])
 rests[264] = (c1, 0.0, HORIZON)
+# Contact keeps the original, closer cover framing.
+c7 = solve_cam((2, -11, 2.3), 0.0, HORIZON, [
+    (t, 200, 600), (t + Vector((0, 0, HEIGHT["tung"])), None, 364)])
 
 # R2 World: pull back; the cast is restaged onto this camera below.
 t = at(CH["tung"], 700)
@@ -131,19 +135,22 @@ c4 = solve_cam((-4, -10, 3), yaw4, HORIZON, [
     (t, 206, 484), (t + Vector((0, 0, HEIGHT["tung"])), None, 356)])
 rests[1512] = rests[1640] = (c4, yaw4, HORIZON)
 
-# R5 Vision: keep the desktop orbit end heading; disc centred between inputs and outputs.
+# R5 Vision: keep the desktop orbit end heading; the disc sits high enough to leave the
+# bottom quarter of the frame for the outputs. Tilted down so the disc still reads from above.
 yaw5 = math.atan2(-11.87, 9.96)
+pitch5 = pitch_for_horizon(0.36)
 t = at(CH["tung"], 2100)
-c5 = solve_cam((10, -8.4, 6.5), yaw5, HORIZON, [
-    (t, 180, 455), (t + Vector((0, 0, HEIGHT["tung"])), None, 350)])
-rests[2053] = rests[2173] = (c5, yaw5, HORIZON)
+c5 = solve_cam((10, -8.4, 6.5), yaw5, pitch5, [
+    (t, 180, 372), (t + Vector((0, 0, HEIGHT["tung"])), None, 282)])
+rests[2053] = rests[2173] = (c5, yaw5, pitch5)
 
-# R6 Team: front on, raised so two rows fit under the circles.
-c6 = Vector((0.0, -12.3, 4.0))
+# R6 Team: front on, raised so two rows fit under the circles. High and far back: the
+# Vision rest ends with the cast large in frame, and Seedance only shrinks them for a real pull-back.
+c6 = Vector((0.0, -14.5, 5.6))
 rests[2484] = (c6, 0.0, HORIZON)
 
-# R7 Contact: back to the cover framing.
-rests[2593] = rests[2800] = (c1, 0.0, HORIZON)
+# R7 Contact: back to the original cover framing.
+rests[2593] = rests[2800] = (c7, 0.0, HORIZON)
 rests[1] = (c1, 0.0, HORIZON)
 rests[624] = rests[744]
 rests[2260] = rests[2484]
