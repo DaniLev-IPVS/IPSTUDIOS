@@ -12,44 +12,44 @@
     {
       "name": "P2-world",
       "startFrame": 140,
-      "frames": 357,
+      "frames": 352,
       "start": 5.8333,
-      "duration": 14.875
+      "duration": 14.6667
     },
     {
       "name": "P3-proof",
-      "startFrame": 497,
+      "startFrame": 492,
       "frames": 307,
-      "start": 20.7083,
+      "start": 20.5,
       "duration": 12.7917
     },
     {
       "name": "P4-problem",
-      "startFrame": 804,
-      "frames": 315,
-      "start": 33.5,
-      "duration": 13.125
+      "startFrame": 799,
+      "frames": 314,
+      "start": 33.2917,
+      "duration": 13.0833
     },
     {
       "name": "P5-vision",
-      "startFrame": 1119,
-      "frames": 420,
-      "start": 46.625,
-      "duration": 17.5
+      "startFrame": 1113,
+      "frames": 421,
+      "start": 46.375,
+      "duration": 17.5417
     },
     {
       "name": "P6-team",
-      "startFrame": 1539,
-      "frames": 149,
-      "start": 64.125,
-      "duration": 6.2083
+      "startFrame": 1534,
+      "frames": 150,
+      "start": 63.9167,
+      "duration": 6.25
     },
     {
       "name": "P7-contact",
-      "startFrame": 1688,
-      "frames": 127,
-      "start": 70.3333,
-      "duration": 5.2917
+      "startFrame": 1684,
+      "frames": 129,
+      "start": 70.1667,
+      "duration": 5.375
     }
   ],
   "rest": [
@@ -63,9 +63,9 @@
     {
       "name": "P2-world",
       "src": "/hero/r2.mp4",
-      "frames": 236,
-      "peakFrame": 118,
-      "duration": 9.8333
+      "frames": 232,
+      "peakFrame": 116,
+      "duration": 9.6667
     },
     {
       "name": "P3-proof",
@@ -98,18 +98,18 @@
     {
       "name": "P7-contact",
       "src": "/hero/r7.mp4",
-      "frames": 364,
-      "peakFrame": 182,
-      "duration": 15.1667
+      "frames": 372,
+      "peakFrame": 186,
+      "duration": 15.5
     }
   ],
   "sources": {
-    "P1-cover": "seedance-v2",
-    "P2-world": "seedance-v2",
-    "P3-proof": "seedance-v2",
-    "P4-problem": "seedance-v2",
-    "P5-vision": "seedance-v2",
-    "P6-team": "seedance-v2",
-    "P7-contact": "seedance-v2"
+    "P1-cover": "seedance-v3",
+    "P2-world": "seedance-v3",
+    "P3-proof": "seedance-v3",
+    "P4-problem": "seedance-v3",
+    "P5-vision": "seedance-v3",
+    "P6-team": "seedance-v3",
+    "P7-contact": "seedance-v3"
   }
 }

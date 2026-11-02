@@ -12,7 +12,7 @@ import numpy as np
 REPO = os.environ.get("HERO_REPO", "/Users/daniellipkovich/My Projects/IP VENTURES CODE/IP Studios")
 MOBILE = os.environ.get("HERO_MOBILE") == "1"
 W = os.environ.get("CHAIN_WORKDIR", "/tmp/seedance-chain")  # sources and downloads
-PAIRS = f"{REPO}/docs/hero/blocking/clips/" + ("mobile" if MOBILE else "pairs")
+PAIRS = f"{REPO}/docs/hero/blocking/clips/" + ("mobile" if MOBILE else "pairs-v3")
 FINAL = f"{REPO}/docs/hero/seedance"
 NAMES = ["P1-cover", "P2-world", "P3-proof", "P4-problem", "P5-vision", "P6-team", "P7-contact"]
 PRE = 2.0   # seconds of the previous final prepended to each source
@@ -22,7 +22,7 @@ LOOK = ("Use Image 1 only for what each character looks like; do not copy Image 
         "Labels: TUNG TUNG TUNG SAHUR is the tall wooden log with big round eyes, thin wooden arms and legs and a wooden baseball bat; "
         "BALLERINA CAPPUCCINA is the coffee-cup-headed girl in an orange tutu; TRALALERO TRALALA is the small grey-blue shark standing on two legs in blue sneakers; "
         "BRR BRR PATAPIM is the tall moss-and-root creature with a long nose; TIM CHEESE is the grey rat in a pinstripe suit; "
-        "COFFEE-CUP NINJA is the takeaway cup ninja with two blades; BANANA GORILLA is the green chimp in a peeled banana; "
+        "COFFEE-CUP NINJA is the takeaway cup ninja; BANANA GORILLA is the green chimp in a peeled banana; "
         "WATERMELON ZEBRA is the zebra with a watermelon body. ")
 KEEP = ("Every character keeps exactly the size, screen position and path of its block figure at every moment. "
         "They move with lively, characterful animation; when standing they breathe, shift weight, glance around and fidget. "
@@ -39,7 +39,7 @@ CASTD = {
  "trala": "TRALALERO TRALALA is the small grey-blue shark standing on two legs in blue sneakers",
  "pata": "BRR BRR PATAPIM is the tall moss-and-root creature with a long nose",
  "cheese": "TIM CHEESE is the grey rat in a pinstripe suit",
- "ninja": "COFFEE-CUP NINJA is the takeaway cup ninja with two blades",
+ "ninja": "COFFEE-CUP NINJA is the takeaway cup ninja",
  "gor": "BANANA GORILLA is the green chimp in a peeled banana",
  "zeb": "WATERMELON ZEBRA is the zebra with a watermelon body",
 }
@@ -66,14 +66,14 @@ VOID = ("no coloured rectangles and no line where the floor ends; the glossy bla
         "no small lights, no lamps, no screens")
 
 BEATS = {
- 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina pirouettes in from the left, Brr Brr Patapim lumbers in from the right and "
-     "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand in a loose line "
-     "in the lower half of the frame, idling, the upper half empty.", ""),
+ 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina walks in from the left on light dancer steps, Brr Brr Patapim walks in from the right with heavy steps and "
+     "Tralalero Tralala walks in briskly from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand in a loose line "
+     "in the lower half of the frame, waiting, the upper half empty.", ""),
  3: ("Tim Cheese walks in from the left holding a blank cream sign, the coffee-cup ninja drops from above and lands, then the whole group walks "
      "off to the left. Tung stays; a flat round pink disc appears under him and lifts him up on a low platform. From 0:14.75 to the end Tung stands "
      "alone on the raised platform, idling.",
      " The only things allowed in the fog are the three huge dark silhouettes that rise far in the background as shadowy giant figures, exactly as in Video 1."),
- 4: ("Tung stands alone on his round pink platform the whole time, breathing, shifting his weight and tapping the bat. From 0:15.25 to the end the camera holds "
+ 4: ("Tung stands alone on his round pink platform the whole time, holding the bat. From 0:15.25 to the end the camera holds "
      "and Tung idles under the spotlight.",
      " This shot is a 3D graph: keep the glowing white wireframe grid on the floor and behind him exactly as in Video 1, fading in after 0:02 and staying "
      "clearly visible to the end. Keep the three glowing laser lines exactly as in Video 1: the line rising from the lower left up to Tung's platform is "
@@ -89,14 +89,45 @@ BEATS = {
      "Brr Brr Patapim; their feet near the lower third of the frame, the entire upper half of the frame empty.", ""),
  7: ("From 0:02 to 0:07.4 they break the line and walk off in different directions, scattering across the floor; never line them up again. "
      "From 0:07.4 to the end they are spread out and relaxed: Tung Tung Tung Sahur stands close to the camera on the right side of the frame; Ballerina "
-     "Cappuccina and Brr Brr Patapim stand far back on the right; the coffee-cup ninja sits on the floor at the far right edge; Tralalero Tralala bounces on "
-     "the spot far back on the left; the banana gorilla sits at the far left edge; the watermelon zebra stands far back on the left; Tim Cheese sits on the "
+     "Cappuccina and Brr Brr Patapim stand far back on the right; the coffee-cup ninja sits on the floor at the far right edge; Tralalero Tralala stands "
+     "far back on the left; the banana gorilla sits at the far left edge; the watermelon zebra stands far back on the left; Tim Cheese sits on the "
      "floor in the front left. The centre of the frame and the entire upper half stay empty.", ""),
 }
 
+if not MOBILE:
+    VOID += ". The floor is evenly dark: no pink or red pool of light, no glowing ellipse or spotlight patch on the floor"
+
+# v3 (desktop): real walking, Tung's bat always in hand, and each character passes the time its own way while waiting.
+WALK_V3 = ("Whenever anyone moves across the floor they really walk, step by step, matching the stepping legs of their block figure: feet lift and plant "
+        "firmly on the floor, no sliding, gliding, floating, hopping or bouncing. Tung Tung Tung Sahur holds his wooden baseball bat in his right hand "
+        "at every moment, gripping the handle and resting it on his right shoulder, exactly where the light-wood stick is on his block figure, one natural wooden bat; the bat is visible "
+        "in every single frame, while he walks and while he stands, and he never puts it down, never lets go of it, never leans it beside him and it never floats. ")
+WAITS = {
+ "tung": "Tung Tung Tung Sahur taps the bat on his shoulder, whistles and looks up and then down at his feet",
+ "capp": "Ballerina Cappuccina rises onto her toes, stretches her arms and inspects her nails",
+ "trala": "Tralalero Tralala kicks idly at the floor with one sneaker and glances around",
+ "pata": "Brr Brr Patapim twiddles his thumbs and sways slowly",
+ "cheese": "Tim Cheese checks his wristwatch and straightens his tie",
+ "ninja": "the coffee-cup ninja stretches and looks up and down",
+ "gor": "the banana gorilla scratches his head and yawns",
+ "zeb": "the watermelon zebra paws at the floor with a hoof and swishes his tail",
+}
+def waits(n):
+    return ("While waiting they pass the time, as if waiting for someone, in small gentle loops: " +
+            "; ".join(WAITS[c] for c in WHO[n]) + ". ")
+
+def prompt1_desktop():
+    return ("Edit Video 1 in three ways. First, erase the floating white words (the character name label) and replace them with empty background, so the "
+            "result contains no words or letters at all. Second, replace the grey block figure with TUNG TUNG TUNG SAHUR from Image 1 (the tall wooden log "
+            "with big round eyes, thin wooden arms and legs and a wooden baseball bat); only this one character appears, never add any other. Use the image "
+            "only for what he looks like; do not copy its framing or size. He walks the whole way, step by step, never hopping: in from far back on the right, "
+            "toward the centre and forward, then he stops just right of centre and waits to the end. " + WALK_V3 + waits(1) +
+            "He keeps the exact size, screen position and path of the block figure at every moment. Third, restyle the background: " + VOID +
+            ". Keep the camera and the timing exactly as in Video 1. The upper half of the frame stays empty. Cinematic 3D animated film look.")
+
 # Mobile restages World, Team and Contact (see scripts/build_mobile_blend.py).
 MOBILE_BEATS = {
- 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina pirouettes in from the left, Brr Brr Patapim lumbers in from the right and "
+ 2: ("From 0:02 to 0:17 Tung watches while Ballerina Cappuccina walks in from the left on light dancer steps, Brr Brr Patapim walks in from the right with heavy steps and "
      "Tralalero Tralala runs in from the bottom of frame, and the camera slowly pulls back. From 0:17 to the end the four stand at two depths in the "
      "lower half of the frame, idling: Tung and Brr Brr Patapim further back, Ballerina Cappuccina at the front left and Tralalero Tralala at the front "
      "right; the upper half of the frame empty. Brr Brr Patapim is small, no taller than Tung: he stands beside Tung at the same distance from "
@@ -181,7 +212,7 @@ def prompt(n):
             "framing or size. " + beat + " Every character keeps the exact size, screen position and path of its block figure at "
             "every moment" + (" (do not enlarge anyone: in this tall frame every head stays in the lower half of the frame, the upper half is "
             "left empty for text)" if MOBILE and n not in (5, 7) else "") + ", with lively, characterful animation" +
-            (". " + WALK + waiting(n) + " " if MOBILE else "; when standing they breathe, shift weight, glance around and fidget. ") +
+            (". " + WALK + waiting(n) + " " if MOBILE else ". " + WALK_V3 + waits(n)) +
             "Fourth, from 0:02 onward the background stays exactly as it is from 0:00 to 0:02: " + VOID + "." + extra +
             " Keep the camera motion and the timing exactly as in Video 1. Cinematic 3D animated film look.")
 
@@ -199,7 +230,7 @@ def read_frames(f, start=0, count=None):
     a = np.frombuffer(raw, np.uint8).reshape(-1, FH, FW, 3)
     return a[start:start + count] if count else a[start:]
 
-def final_path(n): return f"{FINAL}/{'mobile' if MOBILE else 'v2'}/{NAMES[n-1]}.mp4"
+def final_path(n): return f"{FINAL}/{'mobile' if MOBILE else 'v3'}/{NAMES[n-1]}.mp4"
 
 def prep(n):
     os.makedirs(f"{W}/src", exist_ok=True)
@@ -215,8 +246,8 @@ def prep(n):
            f"[0:v]scale={FW}:{FH},fps=24,trim=start_frame={nf-int(PRE*24)},setpts=PTS-STARTPTS[a];"
            f"[1:v]scale={FW}:{FH},fps=24,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1[v]", "-map", "[v]", *enc, out)
     print(out, os.path.getsize(out) / 1e6, "MB", probe_frames(out) / 24, "s")
-    if n > 1 or MOBILE:
-        text = prompt(n) if n > 1 else prompt1()
+    if True:
+        text = prompt(n) if n > 1 else (prompt1() if MOBILE else prompt1_desktop())
         open(f"{W}/src/{NAMES[n-1]}.txt", "w").write(text)
         print(text); print(json.dumps(refs(n)))
 
@@ -242,7 +273,7 @@ def splice(n, f):
     print(f"best match frame {j} (expected {k-1}), mean abs err {min(err):.2f}; neighbours", [round(e, 1) for e in err])
     body = o[j:].astype(np.float32)
     d = last - body[0]
-    N = 14
+    N = int(os.environ.get("SPLICE_N", "14"))  # frames over which the seam correction fades out
     for t in range(min(N, len(body))):
         w = 0.5 * (1 + np.cos(np.pi * t / N))   # 1 -> 0, smooth
         body[t] += d * w
