@@ -877,3 +877,168 @@ html {
 .stage-portrait .copy-proof .stat-list {
   margin-top: 1svh;
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Cover (home page): the deck cover over the live room, with the Enter gate.
+   --------------------------------------------------------------------------------------------- */
+
+.cover {
+  position: relative;
+  height: 100svh;
+  min-height: 520px;
+  overflow: hidden;
+  color: var(--color-cream);
+  background: radial-gradient(ellipse 90% 70% at 40% 62%, #3a1420 0%, var(--color-ink) 70%);
+  transition: opacity 0.6s ease, filter 0.6s ease;
+}
+.gate-leaving .cover { opacity: 0; filter: blur(6px); }
+
+.cover-room { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
+.cover-room.is-live { opacity: 1; }
+.cover-room canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+
+.cover-vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 48%, transparent 40%, rgba(10, 6, 7, 0.65) 100%),
+    linear-gradient(to bottom, rgba(10, 6, 7, 0.55), transparent 30%, transparent 75%, rgba(10, 6, 7, 0.6));
+}
+
+.cover-year {
+  position: absolute; top: clamp(20px, 5.4vh, 56px); left: 0; right: 0; text-align: center;
+  font-size: clamp(0.8rem, 1.2vw, 1.15rem); letter-spacing: 0.9em; padding-left: 0.9em;
+  color: var(--color-cream-2); pointer-events: none;
+}
+
+.cover-cross { position: absolute; top: 50%; width: clamp(40px, 5.8vw, 116px); aspect-ratio: 1; pointer-events: none; translate: 0 -50%; }
+.cover-cross::before, .cover-cross::after { content: ""; position: absolute; background: rgba(244, 232, 221, 0.28); }
+.cover-cross::before { left: 0; right: 0; top: 50%; height: 1px; }
+.cover-cross::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+.cover-cross-l { left: clamp(16px, 3.9vw, 78px); }
+.cover-cross-r { right: clamp(16px, 3.9vw, 78px); }
+
+.cover-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 16px; text-align: center; pointer-events: none;
+  animation: cover-rise 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) both 0.2s;
+}
+.cover-center > * { pointer-events: auto; }
+@keyframes cover-rise { from { opacity: 0; transform: translateY(14px); } }
+
+.cover-mark {
+  font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(3.4rem, 11.2vw, 14rem); line-height: 0.9; letter-spacing: -0.035em; margin: 0;
+  text-shadow: 0 6px 40px rgba(10, 6, 7, 0.5);
+}
+.cover-sub {
+  font-family: var(--font-display); text-transform: uppercase; margin: clamp(10px, 2.2vh, 26px) 0 0;
+  font-size: clamp(0.95rem, 2.65vw, 3.2rem); letter-spacing: -0.045em; line-height: 1; transform: scaleX(0.88);
+  color: var(--color-cream);
+}
+
+.cover-foot {
+  position: absolute; bottom: clamp(16px, 4.2vh, 48px); left: 0; right: 0; text-align: center; margin: 0;
+  font-size: clamp(0.72rem, 1.35vw, 1.3rem); letter-spacing: -0.01em; color: rgba(217, 200, 187, 0.62); pointer-events: none;
+}
+.cover-foot b { font-weight: 700; }
+
+/* The gate: a pill that opens into a see-through password bar. */
+.gate-wrap { margin-top: clamp(28px, 6vh, 64px); display: flex; flex-direction: column; align-items: center; }
+.gate {
+  --w-closed: 132px;
+  --w-open: min(360px, calc(100vw - 48px));
+  position: relative; display: flex; align-items: center; height: 48px; width: var(--w-closed);
+  border-radius: 999px; border: 1px solid rgba(244, 232, 221, 0.22);
+  background: rgba(244, 232, 221, 0.06);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(244, 232, 221, 0.08), 0 10px 40px rgba(10, 6, 7, 0.35);
+  transition: width 0.55s cubic-bezier(0.65, 0, 0.2, 1), border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  overflow: hidden;
+}
+.gate:hover { border-color: rgba(244, 232, 221, 0.36); background: rgba(244, 232, 221, 0.09); }
+.gate.is-open { width: var(--w-open); }
+.gate.is-open:focus-within { border-color: rgba(255, 45, 94, 0.55); box-shadow: inset 0 1px 0 rgba(244, 232, 221, 0.08), 0 0 0 4px rgba(255, 45, 94, 0.1), 0 10px 40px rgba(10, 6, 7, 0.35); }
+.gate.is-shake { animation: gate-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+.gate.is-leaving { border-color: rgba(255, 45, 94, 0.8); box-shadow: 0 0 40px rgba(255, 45, 94, 0.35); }
+@keyframes gate-shake { 20%, 60% { translate: -6px 0; } 40%, 80% { translate: 6px 0; } }
+
+.gate-input {
+  flex: 1 1 auto; min-width: 0; height: 100%; padding: 0 0 0 22px; background: transparent; border: 0; outline: none;
+  color: var(--color-cream); font: 500 0.98rem/1 var(--font-sans); letter-spacing: 0.04em;
+  opacity: 0; transition: opacity 0.3s ease 0s;
+}
+.gate-input[type="password"] { letter-spacing: 0.22em; }
+.gate-input::placeholder { color: rgba(217, 200, 187, 0.5); letter-spacing: 0.04em; }
+.gate.is-open .gate-input { opacity: 1; transition-delay: 0.25s; }
+.gate:not(.is-open) .gate-input { pointer-events: none; }
+
+.gate-eye {
+  flex: none; display: grid; place-items: center; width: 0; height: 36px; padding: 0; border: 0; background: none;
+  color: rgba(217, 200, 187, 0.65); cursor: pointer; opacity: 0; transition: width 0.4s, opacity 0.25s, color 0.2s;
+}
+.gate.is-open .gate-eye { width: 36px; opacity: 1; transition-delay: 0.2s; }
+.gate-eye:hover, .gate-eye[aria-pressed="true"] { color: var(--color-cream); }
+
+.gate-go {
+  flex: none; display: flex; align-items: center; justify-content: center; gap: 10px;
+  height: 100%; padding: 0 22px; margin-left: auto; border: 0; cursor: pointer;
+  background: transparent; color: var(--color-cream);
+  font: 600 0.78rem/1 var(--font-sans); letter-spacing: 0.28em; text-transform: uppercase;
+  transition: padding 0.5s cubic-bezier(0.65, 0, 0.2, 1), background 0.3s, color 0.3s;
+}
+.gate:not(.is-open) .gate-go { width: 100%; }
+.gate-go-label { display: inline-block; max-width: 6em; overflow: hidden; transition: max-width 0.45s cubic-bezier(0.65, 0, 0.2, 1), opacity 0.25s; }
+.gate.is-open .gate-go { width: 40px; height: 40px; margin: 0 4px 0 2px; padding: 0; border-radius: 999px; background: rgba(244, 232, 221, 0.1); gap: 0; }
+.gate.is-open .gate-go:hover { background: var(--color-accent); color: var(--color-ink); }
+.gate.is-open .gate-go-label { max-width: 0; opacity: 0; }
+.gate-go svg { transition: transform 0.3s; }
+.gate:not(.is-open) .gate-go:hover svg { transform: translateX(3px); }
+
+.gate-spin { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid currentColor; border-right-color: transparent; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { rotate: 1turn; } }
+
+.gate-error { min-height: 1.2em; margin: 12px 0 0; font-size: 0.82rem; color: #ff8aa5; letter-spacing: 0.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-center { animation: none; }
+  .gate, .gate-go, .gate-go-label, .gate-input, .gate-eye { transition-duration: 0.01s !important; }
+  .gate.is-shake { animation: none; }
+}
+
+/* Admin: password links dashboard. */
+.admin { min-height: 100svh; padding: 28px 16px 64px; max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.admin-center { justify-content: center; align-items: center; }
+.admin-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 12px; }
+.admin-logo { height: 22px; width: auto; }
+.admin-head-r { display: flex; gap: 18px; align-items: center; }
+.admin-link { font-size: 0.85rem; color: var(--color-cream-2); background: none; border: 0; cursor: pointer; }
+.admin-link:hover { color: var(--color-cream); }
+.admin-card { border: 1px solid var(--color-line); border-radius: 20px; padding: 24px; background: linear-gradient(160deg, rgba(77, 10, 28, 0.35), rgba(20, 10, 13, 0.6)); }
+.admin-login { width: min(360px, 100%); display: flex; flex-direction: column; gap: 12px; }
+.admin-h { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+.admin-count { font-family: var(--font-sans); font-size: 0.8rem; color: var(--color-muted); margin-left: 6px; }
+.admin-p { color: var(--color-cream-2); font-size: 0.92rem; line-height: 1.55; margin: 0 0 16px; }
+.admin-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; }
+@media (max-width: 700px) { .admin-form { grid-template-columns: 1fr; } }
+.admin-input { height: 44px; border-radius: 12px; border: 1px solid var(--color-line); background: rgba(10, 6, 7, 0.5); color: var(--color-cream); padding: 0 14px; font: inherit; font-size: 0.92rem; outline: none; }
+.admin-input:focus { border-color: rgba(255, 45, 94, 0.6); }
+.admin-btn { height: 44px; padding: 0 20px; border-radius: 12px; border: 0; background: var(--color-accent); color: var(--color-ink); font-weight: 600; cursor: pointer; }
+.admin-btn:disabled { opacity: 0.6; }
+.admin-err { color: #ff8aa5; font-size: 0.85rem; margin: 10px 0 0; }
+.admin-made { margin-top: 16px; border: 1px solid rgba(255, 45, 94, 0.35); border-radius: 14px; padding: 16px; background: rgba(255, 45, 94, 0.06); display: flex; flex-direction: column; gap: 10px; }
+.admin-made-h { margin: 0; font-weight: 600; }
+.admin-kv { display: grid; grid-template-columns: 80px 1fr auto; align-items: center; gap: 10px; font-size: 0.85rem; }
+.admin-kv span { color: var(--color-muted); }
+.admin-kv code { font-family: ui-monospace, "SF Mono", Menlo, monospace; word-break: break-all; color: var(--color-cream); }
+.admin-made-foot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.admin-note { color: var(--color-muted); font-size: 0.78rem; }
+.admin-chip { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--color-line); background: rgba(244, 232, 221, 0.05); color: var(--color-cream); font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+.admin-chip:hover { border-color: rgba(244, 232, 221, 0.35); }
+.admin-chip-danger:hover { border-color: #ff8aa5; color: #ff8aa5; }
+.admin-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.admin-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--color-line); flex-wrap: wrap; }
+.admin-row.is-off .admin-row-h { color: var(--color-muted); }
+.admin-row-h { margin: 0; font-weight: 600; }
+.admin-row-meta { margin: 4px 0 0; color: var(--color-muted); font-size: 0.8rem; }
+.admin-row-act { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-tag { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: #ff8aa5; margin-left: 6px; }
