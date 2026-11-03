@@ -13,3 +13,4 @@ next-env.d.ts
 docs/hero/blocking/clips/
 docs/hero/blocking/stills/
 docs/hero/seedance/rejected/
+.data/
