@@ -43,7 +43,7 @@ export async function createPassAction(_: Created, form: FormData): Promise<Crea
   const label = String(form.get("label") ?? "").trim();
   const chosen = String(form.get("password") ?? "").trim();
   if (!label) return { error: "Add who this link is for" };
-  if (chosen && chosen.length < 8) return { error: "Passwords need 8 or more characters" };
+  if (chosen && chosen.length < 5) return { error: "Passwords need 5 or more characters" };
   const password = chosen || generatePassword();
   try {
     const p = await createPass(label.slice(0, 80), password);
