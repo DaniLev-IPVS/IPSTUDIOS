@@ -1,0 +1,6 @@
+# Team details and runtime state stay local (this repo is public)
+names.json
+handles.json
+.env
+.last-sent
+*.log
