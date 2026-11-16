@@ -1,0 +1,7 @@
+.last-sent
+*.log
+.env*
+install.sh
+run.sh
+names.json
+handles.json

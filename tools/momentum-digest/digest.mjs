@@ -28,7 +28,7 @@ const HANDLES = JSON.parse(env.HANDLES || '{}');
 const NAME_MAP = JSON.parse(env.NAME_MAP || '{}');
 
 function need(k) {
-  if (!env[k]) { console.error(`Missing env ${k}`); process.exit(1); }
+  if (!env[k]) throw new Error(`Missing env ${k}`);
   return env[k];
 }
 
@@ -199,29 +199,37 @@ async function sendTelegram(text) {
 
 // ---- main ----
 import { readFileSync, writeFileSync } from 'node:fs';
-const now = localParts();
-const STATE = env.STATE_FILE;
-if (env.FORCE !== '1' && !DRY) {
-  if (STATE) {
-    let last = ''; try { last = readFileSync(STATE, 'utf8').trim(); } catch {}
-    const end = Number(env.SEND_WINDOW_END ?? 12);
-    if (last === now.date || now.hour < SEND_HOUR || now.hour >= end) process.exit(0);
-  } else if (now.hour !== SEND_HOUR) {
-    console.error(`Local hour in ${TZ} is ${now.hour}, not ${SEND_HOUR}; skipping.`);
-    process.exit(0);
+import { fileURLToPath } from 'node:url';
+
+// Runs one digest. Returns { skipped } or { sent, messages }. Used by the CLI below and by api/digest.mjs on Vercel.
+export async function run({ force = env.FORCE === '1', dry = DRY } = {}) {
+  const now = localParts();
+  const STATE = env.STATE_FILE;
+  if (!force && !dry) {
+    if (STATE) {
+      let last = ''; try { last = readFileSync(STATE, 'utf8').trim(); } catch {}
+      const end = Number(env.SEND_WINDOW_END ?? 12);
+      if (last === now.date || now.hour < SEND_HOUR || now.hour >= end) return { skipped: 'outside window or already sent' };
+    } else if (now.hour !== SEND_HOUR) {
+      return { skipped: `local hour in ${TZ} is ${now.hour}, not ${SEND_HOUR}` };
+    }
   }
-}
-const today = now.date;
-const tomorrow = addDays(today, 1);
+  const today = now.date;
+  const tomorrow = addDays(today, 1);
 
-const tasks = await loadTasks(today, tomorrow);
-const header = `☀️ <b>Momentum — ${pretty(today)}</b>\n` +
-  (tasks.length ? `${tasks.length} open task${tasks.length === 1 ? '' : 's'} due through tomorrow.` : 'Nothing overdue, due today, or due tomorrow. 🎉');
-const messages = chunk(header, buildBlocks(tasks, today));
+  const tasks = await loadTasks(today, tomorrow);
+  const header = `☀️ <b>Momentum — ${pretty(today)}</b>\n` +
+    (tasks.length ? `${tasks.length} open task${tasks.length === 1 ? '' : 's'} due through tomorrow.` : 'Nothing overdue, due today, or due tomorrow. 🎉');
+  const messages = chunk(header, buildBlocks(tasks, today));
 
-for (const m of messages) {
-  if (DRY) console.log(m + '\n-----');
-  else await sendTelegram(m);
+  if (!dry) for (const m of messages) await sendTelegram(m);
+  if (!dry && STATE) writeFileSync(STATE, today);
+  return { sent: dry ? 0 : messages.length, tasks: tasks.length, messages };
 }
-if (!DRY && STATE) writeFileSync(STATE, today);
-console.error(DRY ? 'Dry run done.' : `${new Date().toISOString()} Sent ${messages.length} message(s).`);
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const r = await run();
+  if (r.skipped) { console.error(`Skipping: ${r.skipped}`); process.exit(0); }
+  if (DRY) for (const m of r.messages) console.log(m + '\n-----');
+  console.error(DRY ? 'Dry run done.' : `${new Date().toISOString()} Sent ${r.sent} message(s).`);
+}

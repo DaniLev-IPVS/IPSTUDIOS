@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/digest?slot=edt", "schedule": "0 12 * * *" },
+    { "path": "/api/digest?slot=est", "schedule": "0 13 * * *" }
+  ]
+}

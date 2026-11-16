@@ -4,3 +4,4 @@ handles.json
 .env
 .last-sent
 *.log
+.vercel
