@@ -50,11 +50,17 @@ export async function verify(token: string | undefined): Promise<Claims | null> 
     const ok = await crypto.subtle.verify("HMAC", await key(), unb64url(sig) as BufferSource, enc.encode(body));
     if (!ok) return null;
     const claims = JSON.parse(new TextDecoder().decode(unb64url(body))) as Claims;
-    return claims.exp > Date.now() ? claims : null;
+    const left = claims.exp - Date.now();
+    if (left <= 0) return null;
+    // Viewer passes signed before the 30-minute rule carried a 30-day expiry; refuse anything longer.
+    if (claims.r === "viewer" && left > VIEWER_SESSION_MS + 60_000) return null;
+    return claims;
   } catch {
     return null;
   }
 }
 
 export const VIEWER_COOKIE = "ips_pass";
+/** How long a typed password keeps the site open: 30 minutes from entry, across refreshes and new tabs. */
+export const VIEWER_SESSION_MS = 30 * 60_000;
 export const ADMIN_COOKIE = "ips_admin";
